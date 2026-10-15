@@ -6,7 +6,7 @@ The fear moodle rises through its stages as nearby monsters, darkness, low healt
 
 ## Gameplay effects
 
-- Fear adds food and Legendary Survival Overhaul thirst exhaustion each second. Tense, Fearful, and Panicked add 0.02/0.05/0.10 food exhaustion and 0.012/0.03/0.06 thirst exhaustion respectively. Aiming with TaCZ or vanilla ranged weapons causes subtle aim drift, which grows after sprinting or taking damage. Fearful and Panicked play a quiet original breathing sound. TaCZ reloads begin after a short 3/7/12 tick hesitation for the three fear stages.
+- Fear adds food and Legendary Survival Overhaul thirst exhaustion each second. Tense, Fearful, and Panicked add 0.02/0.05/0.10 food exhaustion and 0.012/0.03/0.06 thirst exhaustion respectively. Aiming with TaCZ or vanilla ranged weapons causes subtle aim drift, which grows after sprinting or taking damage. Fearful and Panicked play a quiet original breathing sound.
 - Pain reduces melee attack speed by 4/8/12% and PeakStamina regeneration by 5/10/15%. It also reduces forward input while climbing ladders or vines by 8/16/24%.
 - Exhausted reduces PeakStamina regeneration by 5% per level and increases sprint stamina cost by 6% per level. Movement speed falls by 3% at level 4 and 6% at level 5.
 - Relieved accelerates fear recovery (9 points per second instead of 5) and reduces aim drift by 40%. Its effects end when the moodle disappears.
@@ -15,4 +15,4 @@ Survival and attribute penalties are applied by the server and do not apply in C
 
 Install the built JAR in `mods` on both the server and every client. The icons are original generated pixel art stored in `assets/lazarusmoodles/textures/gui/moodles.png`. All mod text is English.
 
-Download the ready-to-install JAR from [`dist/lazarusmoodles-1.5.0.jar`](dist/lazarusmoodles-1.5.0.jar), or build it with JDK 17: `gradlew build`.
+Download the ready-to-install JAR from [`dist/lazarusmoodles-1.5.1.jar`](dist/lazarusmoodles-1.5.1.jar), or build it with JDK 17: `gradlew build`.

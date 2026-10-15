@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 @Mod(LazarusMoodles.ID)
 public class LazarusMoodles {
     public static final String ID = "lazarusmoodles";
-    private static final String VERSION = "6";
+    private static final String VERSION = "7";
     private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, ID);
     static final RegistryObject<SoundEvent> PANICKED_BREATH = SOUNDS.register("panicked_breath",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "panicked_breath")));
@@ -37,7 +37,6 @@ public class LazarusMoodles {
 
     public LazarusMoodles() {
         SOUNDS.register(FMLJavaModLoadingContext.get().getModEventBus());
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientEffects::registerGunReloadListener);
         CHANNEL.registerMessage(0, MoodPacket.class, MoodPacket::encode, MoodPacket::decode,
                 MoodPacket::handle, OptionalDirection.CLIENTBOUND);
         MinecraftForge.EVENT_BUS.register(this);

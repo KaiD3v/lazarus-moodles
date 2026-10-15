@@ -7,18 +7,13 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.TridentItem;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.MovementInputUpdateEvent;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.lang.reflect.Method;
-import java.util.function.Consumer;
 
 @Mod.EventBusSubscriber(modid = LazarusMoodles.ID, value = Dist.CLIENT)
 public final class ClientEffects {
@@ -26,16 +21,11 @@ public final class ClientEffects {
             "com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator", "fromLocalPlayer", LocalPlayer.class);
     private static final Method TACZ_IS_AIMING = method(
             "com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator", "isAim");
-    private static final Method TACZ_RELOAD = method(
-            "com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator", "reload");
     private static LocalPlayer lastPlayer;
     private static float yawOffset;
     private static float pitchOffset;
     private static int unsettledTicks;
     private static int breathCooldown;
-    private static int reloadDelay;
-    private static ItemStack pendingGun = ItemStack.EMPTY;
-    private static boolean releasingReload;
 
     private ClientEffects() {}
 
@@ -44,36 +34,6 @@ public final class ClientEffects {
         int pain = ClientOverlay.level(3);
         if (pain > 0 && event.getEntity().onClimbable() && event.getInput().forwardImpulse > 0) {
             event.getInput().forwardImpulse *= 1.0f - 0.08f * pain;
-        }
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    static void registerGunReloadListener() {
-        try {
-            Class<? extends Event> event = (Class<? extends Event>) Class.forName(
-                    "com.tacz.guns.api.event.common.GunReloadEvent");
-            MinecraftForge.EVENT_BUS.addListener(EventPriority.NORMAL, false,
-                    (Class) event, (Consumer<Event>) ClientEffects::onGunReload);
-        } catch (ReflectiveOperationException ignored) {
-            // TaCZ is optional when this mod is used outside Project Lazarus.
-        }
-    }
-
-    private static void onGunReload(Event event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || releasingReload || TACZ_RELOAD == null) return;
-        try {
-            Object owner = event.getClass().getMethod("getEntity").invoke(event);
-            if (owner != mc.player) return;
-            int fear = mc.player.isCreative() || mc.player.isSpectator() ? 0 : ClientOverlay.level(0);
-            if (fear == 0) return;
-            event.setCanceled(true);
-            if (reloadDelay == 0) {
-                pendingGun = mc.player.getMainHandItem().copy();
-                reloadDelay = fear == 3 ? 12 : fear == 2 ? 7 : 3;
-            }
-        } catch (ReflectiveOperationException ignored) {
-            // If TaCZ changes its event API, it keeps its normal reload behavior.
         }
     }
 
@@ -86,25 +46,8 @@ public final class ClientEffects {
             lastPlayer = player;
             yawOffset = pitchOffset = 0;
             unsettledTicks = breathCooldown = 0;
-            reloadDelay = 0;
-            pendingGun = ItemStack.EMPTY;
         }
         if (player == null) return;
-
-        if (reloadDelay > 0 && --reloadDelay == 0 && TACZ_OPERATOR != null && TACZ_RELOAD != null) {
-            if (ItemStack.matches(player.getMainHandItem(), pendingGun)) {
-                try {
-                    releasingReload = true;
-                    Object operator = TACZ_OPERATOR.invoke(null, player);
-                    if (operator != null) TACZ_RELOAD.invoke(operator);
-                } catch (ReflectiveOperationException ignored) {
-                    // TaCZ can still reload normally on the next key press.
-                } finally {
-                    releasingReload = false;
-                }
-            }
-            pendingGun = ItemStack.EMPTY;
-        }
 
         int fear = player.isCreative() || player.isSpectator() ? 0 : ClientOverlay.level(0);
         boolean aiming = mc.screen == null && isAiming(player);
