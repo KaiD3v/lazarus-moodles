@@ -1,5 +1,56 @@
 {
   "panicked_breath": {
-    "sounds": ["lazarusmoodles:panicked_breath"]
+    "sounds": [
+      "lazarusmoodles:panicked_breath_1",
+      "lazarusmoodles:panicked_breath_2",
+      "lazarusmoodles:panicked_breath_3",
+      "lazarusmoodles:panicked_breath_4"
+    ]
+  },
+  "heartbeat": {
+    "sounds": [
+      "lazarusmoodles:heartbeat"
+    ]
+  },
+  "pain_grunt": {
+    "sounds": [
+      "lazarusmoodles:pain_grunt_1",
+      "lazarusmoodles:pain_grunt_2",
+      "lazarusmoodles:pain_grunt_3",
+      "lazarusmoodles:pain_grunt_4"
+    ]
+  },
+  "tinnitus": {
+    "sounds": [
+      "lazarusmoodles:tinnitus"
+    ]
+  },
+  "yawn": {
+    "sounds": [
+      "lazarusmoodles:yawn_1",
+      "lazarusmoodles:yawn_2",
+      "lazarusmoodles:yawn_3"
+    ]
+  },
+  "exhausted_pant": {
+    "sounds": [
+      "lazarusmoodles:exhausted_pant_1",
+      "lazarusmoodles:exhausted_pant_2"
+    ]
+  },
+  "relief_sigh": {
+    "sounds": [
+      "lazarusmoodles:relief_sigh_1",
+      "lazarusmoodles:relief_sigh_2",
+      "lazarusmoodles:relief_sigh_3",
+      "lazarusmoodles:relief_sigh_4"
+    ]
+  },
+  "calm_breath": {
+    "sounds": [
+      "lazarusmoodles:calm_breath_1",
+      "lazarusmoodles:calm_breath_2",
+      "lazarusmoodles:calm_breath_3"
+    ]
   }
 }

@@ -29,10 +29,24 @@ import java.util.function.Supplier;
 @Mod(LazarusMoodles.ID)
 public class LazarusMoodles {
     public static final String ID = "lazarusmoodles";
-    private static final String VERSION = "7";
+    private static final String VERSION = "11";
     private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, ID);
     static final RegistryObject<SoundEvent> PANICKED_BREATH = SOUNDS.register("panicked_breath",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "panicked_breath")));
+    static final RegistryObject<SoundEvent> PAIN_GRUNT = SOUNDS.register("pain_grunt",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "pain_grunt")));
+    static final RegistryObject<SoundEvent> TINNITUS = SOUNDS.register("tinnitus",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "tinnitus")));
+    static final RegistryObject<SoundEvent> YAWN = SOUNDS.register("yawn",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "yawn")));
+    static final RegistryObject<SoundEvent> EXHAUSTED_PANT = SOUNDS.register("exhausted_pant",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "exhausted_pant")));
+    static final RegistryObject<SoundEvent> RELIEF_SIGH = SOUNDS.register("relief_sigh",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "relief_sigh")));
+    static final RegistryObject<SoundEvent> CALM_BREATH = SOUNDS.register("calm_breath",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "calm_breath")));
+    static final RegistryObject<SoundEvent> HEARTBEAT = SOUNDS.register("heartbeat",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "heartbeat")));
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(ID, "moodles"), () -> VERSION, VERSION::equals, VERSION::equals);
 
@@ -45,8 +59,9 @@ public class LazarusMoodles {
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)
-                || player.tickCount % 20 != 0) return;
+        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
+        MoodEffects.slowReload(player);
+        if (player.tickCount % 20 != 0) return;
         MoodState state = MoodState.load(player);
         state.update(player);
         state.save(player);
@@ -59,13 +74,16 @@ public class LazarusMoodles {
         if (!(event.getEntity() instanceof ServerPlayer player) || event.getAmount() <= 0) return;
         MoodState state = MoodState.load(player);
         state.onHurt(event.getAmount());
+        MoodState.markAcutePain(player);
         state.save(player);
         sync(player, state);
     }
 
     @SubscribeEvent
     public void onWakeUp(PlayerWakeUpEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer player) || player.getSleepTimer() < 100) return;
+        // wakeImmediately is false only when the night was skipped; leaving the bed early does not count.
+        if (!(event.getEntity() instanceof ServerPlayer player) || event.wakeImmediately()
+                || player.getSleepTimer() < 100) return;
         MoodState state = MoodState.load(player);
         state.onSleep(player);
         state.save(player);

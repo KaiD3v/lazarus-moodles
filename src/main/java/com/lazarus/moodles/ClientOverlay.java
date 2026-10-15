@@ -27,6 +27,8 @@ public final class ClientOverlay {
 
     @SubscribeEvent
     public static void register(RegisterGuiOverlaysEvent event) {
+        event.registerBelowAll("fear_vignette", (gui, graphics, partialTick, width, height) ->
+                ClientEffects.renderOverlay(graphics, partialTick, width, height));
         event.registerAboveAll("moodles", (gui, graphics, partialTick, width, height) -> render(graphics, width, height));
     }
 
