@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = LazarusMoodles.ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class ClientOverlay {
     private static final ResourceLocation ICONS = new ResourceLocation(LazarusMoodles.ID, "textures/gui/moodles.png");
-    private static final String[] KEYS = {"tense", "fearful", "panicked", "irritated", "exhausted", "relieved"};
+    private static final String[] KEYS = {"tense", "fearful", "panicked", "pain", "exhausted", "relieved"};
     private static byte[] levels = new byte[MoodState.COUNT];
 
     private ClientOverlay() {}
@@ -36,7 +36,7 @@ public final class ClientOverlay {
         for (int i = 0; i < levels.length; i++) {
             int level = levels[i];
             if (level == 0) continue;
-            int icon = i == 0 ? level - 1 : i + 3;
+            int icon = i == 0 ? level - 1 : i == 3 ? 3 : i + 3;
             graphics.fill(x - 2, y - 2, x + 26, y + 26, 0xB0101511);
             graphics.blit(ICONS, x, y, 24, 24, (float) ((icon % 3) * 512),
                     (float) ((icon / 3) * 512), 512, 512, 1536, 1024);

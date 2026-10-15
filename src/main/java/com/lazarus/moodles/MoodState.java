@@ -6,15 +6,15 @@ import net.minecraft.world.entity.monster.Monster;
 
 final class MoodState {
     static final String TAG = "LazarusMoodles";
-    static final int COUNT = 3;
+    static final int COUNT = 4;
     private static final String[] KEYS = {"Stress", "Exhausted", "Relieved"};
-    private final float[] values = new float[COUNT];
+    private final float[] values = new float[KEYS.length];
     private boolean wasThreatened;
 
     static MoodState load(ServerPlayer player) {
         MoodState state = new MoodState();
         CompoundTag tag = player.getPersistentData().getCompound(TAG);
-        for (int i = 0; i < COUNT; i++) state.values[i] = tag.getFloat(KEYS[i]);
+        for (int i = 0; i < state.values.length; i++) state.values[i] = tag.getFloat(KEYS[i]);
         if (!tag.contains("Stress")) {
             if (tag.getFloat("Irritated") >= 15) state.values[0] = 60;
             else if (tag.getFloat("Panicked") >= 15) state.values[0] = 60;
@@ -28,7 +28,7 @@ final class MoodState {
 
     void save(ServerPlayer player) {
         CompoundTag tag = new CompoundTag();
-        for (int i = 0; i < COUNT; i++) tag.putFloat(KEYS[i], values[i]);
+        for (int i = 0; i < values.length; i++) tag.putFloat(KEYS[i], values[i]);
         tag.putBoolean("WasThreatened", wasThreatened);
         player.getPersistentData().put(TAG, tag);
     }
@@ -54,13 +54,15 @@ final class MoodState {
         values[0] = Math.min(84, values[0] + Math.min(30, 10 + damage * 3));
     }
 
-    byte[] levels() {
+    byte[] levels(ServerPlayer player) {
         byte[] levels = new byte[COUNT];
-        for (int i = 0; i < COUNT; i++) {
+        for (int i = 0; i < values.length; i++) {
             float value = values[i];
             levels[i] = (byte) (value < 15 ? 0 : value < 35 ? 1 : value < 60 ? 2 : value < 85 ? 3 : 4);
         }
         levels[0] = (byte) Math.min(3, levels[0]);
+        float health = player.getHealth() / player.getMaxHealth();
+        levels[3] = (byte) (health >= 1 ? 0 : health <= 0.25f ? 3 : health <= 0.5f ? 2 : 1);
         return levels;
     }
 
