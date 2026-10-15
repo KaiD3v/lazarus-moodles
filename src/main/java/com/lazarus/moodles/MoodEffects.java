@@ -25,7 +25,21 @@ final class MoodEffects {
     private MoodEffects() {}
 
     static void apply(ServerPlayer player, byte[] levels) {
+        applyModifiers(player, levels);
         int fear = levels[0];
+        if (!player.isCreative() && !player.isSpectator() && fear > 0) {
+            player.getFoodData().addExhaustion(FOOD_COST[fear]);
+            if (ADD_THIRST_EXHAUSTION != null) {
+                try {
+                    ADD_THIRST_EXHAUSTION.invoke(null, player, THIRST_COST[fear]);
+                } catch (ReflectiveOperationException ignored) {
+                    // An optional thirst integration must not interrupt player ticks.
+                }
+            }
+        }
+    }
+
+    static void applyModifiers(ServerPlayer player, byte[] levels) {
         int exhaustion = levels[1];
         int pain = levels[3];
         boolean playing = !player.isCreative() && !player.isSpectator();
@@ -39,16 +53,6 @@ final class MoodEffects {
         modifier(player, PEAK_SPRINT_COST, SPRINT_COST,
                 "Lazarus sprint cost", playing ? 0.06 * exhaustion : 0);
 
-        if (playing && fear > 0) {
-            player.getFoodData().addExhaustion(FOOD_COST[fear]);
-            if (ADD_THIRST_EXHAUSTION != null) {
-                try {
-                    ADD_THIRST_EXHAUSTION.invoke(null, player, THIRST_COST[fear]);
-                } catch (ReflectiveOperationException ignored) {
-                    // An optional thirst integration must not interrupt player ticks.
-                }
-            }
-        }
     }
 
     private static Attribute attribute(String namespace, String path) {

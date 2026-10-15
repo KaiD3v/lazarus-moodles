@@ -7,6 +7,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
@@ -87,7 +88,12 @@ public class LazarusMoodles {
         if (event.getEntity() instanceof ServerPlayer player) sync(player, MoodState.load(player));
     }
 
-    private static void sync(ServerPlayer player, MoodState state) {
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        MoodleCommands.register(event.getDispatcher());
+    }
+
+    static void sync(ServerPlayer player, MoodState state) {
         CHANNEL.sendTo(new MoodPacket(state.levels(player)), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
     }
 

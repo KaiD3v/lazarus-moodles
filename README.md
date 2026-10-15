@@ -13,6 +13,19 @@ The fear moodle rises through its stages as nearby monsters, darkness, low healt
 
 Survival and attribute penalties are applied by the server and do not apply in Creative or Spectator mode. TaCZ, PeakStamina, and Legendary Survival Overhaul integrations are optional; their respective effects activate when those mods are present.
 
+## Test commands
+
+Operators can force moodle levels for testing without changing health or distance traveled. The override affects the HUD and gameplay effects until cleared, the player dies, or the player disconnects. The underlying natural moodle continues updating.
+
+- `/lm fear 0..3` — 1 Tense, 2 Fearful, 3 Panicked.
+- `/lm pain 0..3` — force Pain independently of health.
+- `/lm exhausted 0..5` — force Exhausted independently of travel distance.
+- `/lm relieved 0..4` — force Relieved.
+- `/lm status` — show current effective levels and identify forced values.
+- `/lm clear` — remove all overrides; `/lm clear fear`, `pain`, `exhausted`, or `relieved` clears one.
+
+`/lazarusmoodles` is an alias for `/lm`. Level 0 hides a moodle until the override is cleared. Commands require permission level 2 (cheats enabled in single player).
+
 Install the built JAR in `mods` on both the server and every client. The icons are original generated pixel art stored in `assets/lazarusmoodles/textures/gui/moodles.png`. All mod text is English.
 
-Download the ready-to-install JAR from [`dist/lazarusmoodles-1.5.1.jar`](dist/lazarusmoodles-1.5.1.jar), or build it with JDK 17: `gradlew build`.
+Download the ready-to-install JAR from [`dist/lazarusmoodles-1.6.0.jar`](dist/lazarusmoodles-1.6.0.jar), or build it with JDK 17: `gradlew build`.

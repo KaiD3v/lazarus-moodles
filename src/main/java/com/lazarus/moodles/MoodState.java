@@ -5,12 +5,17 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.stats.Stats;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.WeakHashMap;
+
 final class MoodState {
     static final String TAG = "LazarusMoodles";
     static final int COUNT = 4;
     private static final String[] KEYS = {"Stress", "Relieved"};
     private static final long CM_PER_LEVEL = 100_000;
     private static final long MAX_FOOT_DISTANCE_CM = 5 * CM_PER_LEVEL;
+    private static final Map<ServerPlayer, byte[]> TEST_LEVELS = new WeakHashMap<>();
     private final float[] values = new float[KEYS.length];
     private boolean wasThreatened;
     private long footDistanceCm;
@@ -52,8 +57,10 @@ final class MoodState {
         boolean critical = nearby >= 6 || nearby >= 3 && health < 0.5f;
         boolean unsafe = nearby >= 3 || health < 0.45f;
         float target = critical ? 84 : unsafe ? 59 : threatened || light < 4 ? 34 : 0;
+        int forcedRelief = testLevel(player, 2);
+        boolean relieved = forcedRelief >= 0 ? forcedRelief > 0 : values[1] >= 15;
         if (values[0] < target) values[0] = Math.min(target, values[0] + (critical ? 10 : unsafe ? 9 : 8));
-        else values[0] = Math.max(target, values[0] - (values[1] >= 15 ? 9 : 5));
+        else values[0] = Math.max(target, values[0] - (relieved ? 9 : 5));
         long currentFootStatCm = footStats(player);
         if (currentFootStatCm > lastFootStatCm) {
             footDistanceCm = Math.min(MAX_FOOT_DISTANCE_CM,
@@ -82,7 +89,38 @@ final class MoodState {
         levels[2] = level(values[1]);
         float health = player.getHealth() / player.getMaxHealth();
         levels[3] = (byte) (health >= 1 ? 0 : health <= 0.25f ? 3 : health <= 0.5f ? 2 : 1);
+        for (int i = 0; i < COUNT; i++) {
+            int forced = testLevel(player, i);
+            if (forced >= 0) levels[i] = (byte) forced;
+        }
         return levels;
+    }
+
+    static void setTestLevel(ServerPlayer player, int index, int level) {
+        byte[] forced = TEST_LEVELS.computeIfAbsent(player, ignored -> {
+            byte[] empty = new byte[COUNT];
+            Arrays.fill(empty, (byte) -1);
+            return empty;
+        });
+        forced[index] = (byte) level;
+    }
+
+    static void clearTestLevel(ServerPlayer player, int index) {
+        byte[] forced = TEST_LEVELS.get(player);
+        if (forced == null) return;
+        forced[index] = -1;
+        boolean empty = true;
+        for (byte level : forced) if (level >= 0) empty = false;
+        if (empty) TEST_LEVELS.remove(player);
+    }
+
+    static void clearTestLevels(ServerPlayer player) {
+        TEST_LEVELS.remove(player);
+    }
+
+    static int testLevel(ServerPlayer player, int index) {
+        byte[] forced = TEST_LEVELS.get(player);
+        return forced == null ? -1 : forced[index];
     }
 
     private void move(int index, float delta) {
