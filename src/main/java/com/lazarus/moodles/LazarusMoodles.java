@@ -3,6 +3,7 @@ package com.lazarus.moodles;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -13,21 +14,30 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 import java.util.function.Supplier;
 
 @Mod(LazarusMoodles.ID)
 public class LazarusMoodles {
     public static final String ID = "lazarusmoodles";
-    private static final String VERSION = "5";
+    private static final String VERSION = "6";
+    private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, ID);
+    static final RegistryObject<SoundEvent> PANICKED_BREATH = SOUNDS.register("panicked_breath",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "panicked_breath")));
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(ID, "moodles"), () -> VERSION, VERSION::equals, VERSION::equals);
 
     public LazarusMoodles() {
+        SOUNDS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientEffects::registerGunReloadListener);
         CHANNEL.registerMessage(0, MoodPacket.class, MoodPacket::encode, MoodPacket::decode,
                 MoodPacket::handle, OptionalDirection.CLIENTBOUND);
         MinecraftForge.EVENT_BUS.register(this);
@@ -40,6 +50,7 @@ public class LazarusMoodles {
         MoodState state = MoodState.load(player);
         state.update(player);
         state.save(player);
+        MoodEffects.apply(player, state.levels(player));
         sync(player, state);
     }
 

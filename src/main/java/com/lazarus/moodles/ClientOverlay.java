@@ -21,6 +21,10 @@ public final class ClientOverlay {
         levels = next.clone();
     }
 
+    static int level(int index) {
+        return levels[index];
+    }
+
     @SubscribeEvent
     public static void register(RegisterGuiOverlaysEvent event) {
         event.registerAboveAll("moodles", (gui, graphics, partialTick, width, height) -> render(graphics, width, height));

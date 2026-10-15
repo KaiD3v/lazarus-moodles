@@ -53,7 +53,7 @@ final class MoodState {
         boolean unsafe = nearby >= 3 || health < 0.45f;
         float target = critical ? 84 : unsafe ? 59 : threatened || light < 4 ? 34 : 0;
         if (values[0] < target) values[0] = Math.min(target, values[0] + (critical ? 10 : unsafe ? 9 : 8));
-        else values[0] = Math.max(target, values[0] - 5);
+        else values[0] = Math.max(target, values[0] - (values[1] >= 15 ? 9 : 5));
         long currentFootStatCm = footStats(player);
         if (currentFootStatCm > lastFootStatCm) {
             footDistanceCm = Math.min(MAX_FOOT_DISTANCE_CM,

@@ -1,0 +1,153 @@
+package com.lazarus.moodles;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.MovementInputUpdateEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+import java.lang.reflect.Method;
+import java.util.function.Consumer;
+
+@Mod.EventBusSubscriber(modid = LazarusMoodles.ID, value = Dist.CLIENT)
+public final class ClientEffects {
+    private static final Method TACZ_OPERATOR = method(
+            "com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator", "fromLocalPlayer", LocalPlayer.class);
+    private static final Method TACZ_IS_AIMING = method(
+            "com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator", "isAim");
+    private static final Method TACZ_RELOAD = method(
+            "com.tacz.guns.api.client.gameplay.IClientPlayerGunOperator", "reload");
+    private static LocalPlayer lastPlayer;
+    private static float yawOffset;
+    private static float pitchOffset;
+    private static int unsettledTicks;
+    private static int breathCooldown;
+    private static int reloadDelay;
+    private static ItemStack pendingGun = ItemStack.EMPTY;
+    private static boolean releasingReload;
+
+    private ClientEffects() {}
+
+    @SubscribeEvent
+    public static void onMovementInput(MovementInputUpdateEvent event) {
+        int pain = ClientOverlay.level(3);
+        if (pain > 0 && event.getEntity().onClimbable() && event.getInput().forwardImpulse > 0) {
+            event.getInput().forwardImpulse *= 1.0f - 0.08f * pain;
+        }
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static void registerGunReloadListener() {
+        try {
+            Class<? extends Event> event = (Class<? extends Event>) Class.forName(
+                    "com.tacz.guns.api.event.common.GunReloadEvent");
+            MinecraftForge.EVENT_BUS.addListener(EventPriority.NORMAL, false,
+                    (Class) event, (Consumer<Event>) ClientEffects::onGunReload);
+        } catch (ReflectiveOperationException ignored) {
+            // TaCZ is optional when this mod is used outside Project Lazarus.
+        }
+    }
+
+    private static void onGunReload(Event event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || releasingReload || TACZ_RELOAD == null) return;
+        try {
+            Object owner = event.getClass().getMethod("getEntity").invoke(event);
+            if (owner != mc.player) return;
+            int fear = mc.player.isCreative() || mc.player.isSpectator() ? 0 : ClientOverlay.level(0);
+            if (fear == 0) return;
+            event.setCanceled(true);
+            if (reloadDelay == 0) {
+                pendingGun = mc.player.getMainHandItem().copy();
+                reloadDelay = fear == 3 ? 12 : fear == 2 ? 7 : 3;
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // If TaCZ changes its event API, it keeps its normal reload behavior.
+        }
+    }
+
+    @SubscribeEvent
+    public static void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer player = mc.player;
+        if (player == null || player != lastPlayer) {
+            lastPlayer = player;
+            yawOffset = pitchOffset = 0;
+            unsettledTicks = breathCooldown = 0;
+            reloadDelay = 0;
+            pendingGun = ItemStack.EMPTY;
+        }
+        if (player == null) return;
+
+        if (reloadDelay > 0 && --reloadDelay == 0 && TACZ_OPERATOR != null && TACZ_RELOAD != null) {
+            if (ItemStack.matches(player.getMainHandItem(), pendingGun)) {
+                try {
+                    releasingReload = true;
+                    Object operator = TACZ_OPERATOR.invoke(null, player);
+                    if (operator != null) TACZ_RELOAD.invoke(operator);
+                } catch (ReflectiveOperationException ignored) {
+                    // TaCZ can still reload normally on the next key press.
+                } finally {
+                    releasingReload = false;
+                }
+            }
+            pendingGun = ItemStack.EMPTY;
+        }
+
+        int fear = player.isCreative() || player.isSpectator() ? 0 : ClientOverlay.level(0);
+        boolean aiming = mc.screen == null && isAiming(player);
+        if (player.isSprinting() || player.hurtTime > 0) unsettledTicks = fear * 15;
+        else if (unsettledTicks > 0) unsettledTicks--;
+
+        float strength = fear * 0.10f;
+        if (unsettledTicks > 0) strength *= 1.0f + 0.5f * unsettledTicks / 45f;
+        if (ClientOverlay.level(2) > 0) strength *= 0.6f;
+        float nextYaw = aiming ? Mth.sin(player.tickCount * 0.21f) * strength : 0;
+        float nextPitch = aiming ? Mth.cos(player.tickCount * 0.17f) * strength * 0.7f : 0;
+        player.setYRot(player.getYRot() + nextYaw - yawOffset);
+        player.setXRot(Mth.clamp(player.getXRot() + nextPitch - pitchOffset, -90, 90));
+        yawOffset = nextYaw;
+        pitchOffset = nextPitch;
+
+        if (breathCooldown > 0) breathCooldown--;
+        if (fear >= 2 && breathCooldown == 0 && mc.screen == null && !player.isCreative()) {
+            mc.getSoundManager().play(SimpleSoundInstance.forUI(LazarusMoodles.PANICKED_BREATH.get(),
+                    0.95f + fear * 0.02f, fear == 3 ? 0.25f : 0.16f));
+            breathCooldown = fear == 3 ? 65 : 95;
+        }
+    }
+
+    private static boolean isAiming(LocalPlayer player) {
+        if (TACZ_OPERATOR != null && TACZ_IS_AIMING != null) {
+            try {
+                Object operator = TACZ_OPERATOR.invoke(null, player);
+                if (operator != null && Boolean.TRUE.equals(TACZ_IS_AIMING.invoke(operator))) return true;
+            } catch (ReflectiveOperationException ignored) {
+                // Other ranged weapons still use vanilla aiming below.
+            }
+        }
+        return player.isUsingItem() && (player.getUseItem().getItem() instanceof BowItem
+                || player.getUseItem().getItem() instanceof CrossbowItem
+                || player.getUseItem().getItem() instanceof TridentItem);
+    }
+
+    private static Method method(String className, String name, Class<?>... arguments) {
+        try {
+            return Class.forName(className).getMethod(name, arguments);
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+}
