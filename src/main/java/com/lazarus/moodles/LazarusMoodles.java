@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 @Mod(LazarusMoodles.ID)
 public class LazarusMoodles {
     public static final String ID = "lazarusmoodles";
-    private static final String VERSION = "2";
+    private static final String VERSION = "3";
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(ID, "moodles"), () -> VERSION, VERSION::equals, VERSION::equals);
 

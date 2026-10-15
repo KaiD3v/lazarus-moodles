@@ -16,11 +16,12 @@ final class MoodState {
         CompoundTag tag = player.getPersistentData().getCompound(TAG);
         for (int i = 0; i < COUNT; i++) state.values[i] = tag.getFloat(KEYS[i]);
         if (!tag.contains("Stress")) {
-            if (tag.getFloat("Irritated") >= 15) state.values[0] = 85;
+            if (tag.getFloat("Irritated") >= 15) state.values[0] = 60;
             else if (tag.getFloat("Panicked") >= 15) state.values[0] = 60;
             else if (tag.getFloat("Fearful") >= 15) state.values[0] = 35;
             else if (tag.getFloat("Tense") >= 15) state.values[0] = 15;
         }
+        state.values[0] = Math.min(84, state.values[0]);
         state.wasThreatened = tag.getBoolean("WasThreatened");
         return state;
     }
@@ -50,7 +51,7 @@ final class MoodState {
     }
 
     void onHurt(float damage) {
-        move(0, Math.min(30, 10 + damage * 3));
+        values[0] = Math.min(84, values[0] + Math.min(30, 10 + damage * 3));
     }
 
     byte[] levels() {
@@ -59,6 +60,7 @@ final class MoodState {
             float value = values[i];
             levels[i] = (byte) (value < 15 ? 0 : value < 35 ? 1 : value < 60 ? 2 : value < 85 ? 3 : 4);
         }
+        levels[0] = (byte) Math.min(3, levels[0]);
         return levels;
     }
 
