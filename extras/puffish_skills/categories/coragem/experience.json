@@ -1,0 +1,11 @@
+{
+  "level_limit": 6,
+  "reset_on_death": false,
+  "experience_per_level": {
+    "type": "expression",
+    "data": {
+      "expression": "25 * (level + 1) ^ 1.6"
+    }
+  },
+  "sources": []
+}

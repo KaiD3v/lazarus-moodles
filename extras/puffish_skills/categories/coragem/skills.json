@@ -1,0 +1,33 @@
+{
+  "sangue_frio": {
+    "x": 0,
+    "y": 0,
+    "definition": "sangue_frio",
+    "root": true
+  },
+  "nervos_de_aco": {
+    "x": -40,
+    "y": 30,
+    "definition": "nervos_de_aco"
+  },
+  "respiracao_controlada": {
+    "x": 40,
+    "y": 30,
+    "definition": "respiracao_controlada"
+  },
+  "veterano": {
+    "x": -40,
+    "y": 60,
+    "definition": "veterano"
+  },
+  "maos_firmes": {
+    "x": 40,
+    "y": 60,
+    "definition": "maos_firmes"
+  },
+  "inabalavel": {
+    "x": 0,
+    "y": 90,
+    "definition": "inabalavel"
+  }
+}

@@ -83,6 +83,10 @@ final class MoodEffects {
 
     }
 
+    static int fear(ServerPlayer player) {
+        return FEAR.getOrDefault(player, 0);
+    }
+
     // Called every server tick: pushes TaCZ's reload start time forward so the reload finishes later.
     static void slowReload(ServerPlayer player) {
         int fear = FEAR.getOrDefault(player, 0);
@@ -93,7 +97,8 @@ final class MoodEffects {
             long started = TACZ_RELOAD_TIME.getLong(data);
             Object state = TACZ_RELOAD_STATE.get(data);
             if (started > 0 && state != null && Boolean.TRUE.equals(TACZ_IS_RELOADING.invoke(state))) {
-                TACZ_RELOAD_TIME.setLong(data, started + RELOAD_LAG_MS[fear]);
+                double steadiness = Math.min(1, Courage.value(player, Courage.FEAR_STEADINESS));
+                TACZ_RELOAD_TIME.setLong(data, started + Math.round(RELOAD_LAG_MS[fear] * (1 - steadiness)));
             }
         } catch (ReflectiveOperationException | RuntimeException ignored) {
             // If TaCZ changes its internals, reloads simply keep their normal speed.

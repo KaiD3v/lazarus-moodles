@@ -1,0 +1,30 @@
+{
+  "normal": {
+    "bidirectional": [
+      [
+        "sangue_frio",
+        "nervos_de_aco"
+      ],
+      [
+        "sangue_frio",
+        "respiracao_controlada"
+      ],
+      [
+        "nervos_de_aco",
+        "veterano"
+      ],
+      [
+        "respiracao_controlada",
+        "maos_firmes"
+      ],
+      [
+        "veterano",
+        "inabalavel"
+      ],
+      [
+        "maos_firmes",
+        "inabalavel"
+      ]
+    ]
+  }
+}

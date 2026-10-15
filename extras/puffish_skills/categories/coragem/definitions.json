@@ -1,0 +1,167 @@
+{
+  "sangue_frio": {
+    "title": "Sangue Frio",
+    "description": "O medo sobe 10% mais devagar.",
+    "icon": {
+      "type": "item",
+      "data": {
+        "item": "minecraft:blue_ice"
+      }
+    },
+    "frame": {
+      "type": "advancement",
+      "data": {
+        "frame": "goal"
+      }
+    },
+    "rewards": [
+      {
+        "type": "puffish_skills:attribute",
+        "data": {
+          "attribute": "lazarusmoodles:fear_resistance",
+          "value": 0.1,
+          "operation": "addition"
+        }
+      }
+    ]
+  },
+  "nervos_de_aco": {
+    "title": "Nervos de Aço",
+    "description": "O medo sobe mais 10% mais devagar (20% no total). Tomar dano assusta 25% menos.",
+    "icon": {
+      "type": "item",
+      "data": {
+        "item": "minecraft:iron_ingot"
+      }
+    },
+    "frame": {
+      "type": "advancement",
+      "data": {
+        "frame": "task"
+      }
+    },
+    "rewards": [
+      {
+        "type": "puffish_skills:attribute",
+        "data": {
+          "attribute": "lazarusmoodles:fear_resistance",
+          "value": 0.1,
+          "operation": "addition"
+        }
+      },
+      {
+        "type": "puffish_skills:attribute",
+        "data": {
+          "attribute": "lazarusmoodles:fear_damage_resistance",
+          "value": 0.25,
+          "operation": "addition"
+        }
+      }
+    ]
+  },
+  "veterano": {
+    "title": "Veterano",
+    "description": "A escuridão sozinha não causa mais medo; só monstros, vida baixa e dano.",
+    "icon": {
+      "type": "effect",
+      "data": {
+        "effect": "night_vision"
+      }
+    },
+    "frame": {
+      "type": "advancement",
+      "data": {
+        "frame": "task"
+      }
+    },
+    "rewards": [
+      {
+        "type": "puffish_skills:attribute",
+        "data": {
+          "attribute": "lazarusmoodles:dark_immunity",
+          "value": 1,
+          "operation": "addition"
+        }
+      }
+    ]
+  },
+  "respiracao_controlada": {
+    "title": "Respiração Controlada",
+    "description": "O medo diminui 2 pontos por segundo mais rápido.",
+    "icon": {
+      "type": "effect",
+      "data": {
+        "effect": "water_breathing"
+      }
+    },
+    "frame": {
+      "type": "advancement",
+      "data": {
+        "frame": "task"
+      }
+    },
+    "rewards": [
+      {
+        "type": "puffish_skills:attribute",
+        "data": {
+          "attribute": "lazarusmoodles:fear_recovery",
+          "value": 2,
+          "operation": "addition"
+        }
+      }
+    ]
+  },
+  "maos_firmes": {
+    "title": "Mãos Firmes",
+    "description": "A oscilação da mira e a recarga lenta causadas pelo medo ficam 30% mais fracas.",
+    "icon": {
+      "type": "item",
+      "data": {
+        "item": "minecraft:crossbow"
+      }
+    },
+    "frame": {
+      "type": "advancement",
+      "data": {
+        "frame": "task"
+      }
+    },
+    "rewards": [
+      {
+        "type": "puffish_skills:attribute",
+        "data": {
+          "attribute": "lazarusmoodles:fear_steadiness",
+          "value": 0.3,
+          "operation": "addition"
+        }
+      }
+    ]
+  },
+  "inabalavel": {
+    "title": "Inabalável",
+    "description": "O pânico exige 8 monstros por perto em vez de 6 (4 em vez de 3 com vida baixa). Exige 4 habilidades desta árvore.",
+    "icon": {
+      "type": "item",
+      "data": {
+        "item": "minecraft:totem_of_undying"
+      }
+    },
+    "frame": {
+      "type": "advancement",
+      "data": {
+        "frame": "challenge"
+      }
+    },
+    "rewards": [
+      {
+        "type": "puffish_skills:attribute",
+        "data": {
+          "attribute": "lazarusmoodles:panic_threshold",
+          "value": 2,
+          "operation": "addition"
+        }
+      }
+    ],
+    "required_spent_points": 4
+  }
+}

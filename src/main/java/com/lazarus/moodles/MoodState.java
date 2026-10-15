@@ -78,14 +78,18 @@ final class MoodState {
         int light = player.serverLevel().getMaxLocalRawBrightness(player.blockPosition());
         float health = player.getHealth() / player.getMaxHealth();
         boolean threatened = nearby > 0;
-        boolean critical = nearby >= 6 || nearby >= 3 && health < 0.5f;
+        int panicBonus = (int) Courage.value(player, Courage.PANIC_THRESHOLD);
+        boolean critical = nearby >= 6 + panicBonus || nearby >= 3 + panicBonus / 2 && health < 0.5f;
         boolean unsafe = nearby >= 3 || health < 0.45f;
-        float target = critical ? 84 : unsafe ? 59 : threatened || light < 4 ? 34 : 0;
+        boolean dark = light < 4 && Courage.value(player, Courage.DARK_IMMUNITY) < 0.5;
+        float target = critical ? 84 : unsafe ? 59 : threatened || dark ? 34 : 0;
+        float courage = 1 - Courage.fearResistance(player);
         int forcedRelief = testLevel(player, 2);
         int relief = Math.min(4, forcedRelief >= 0 ? forcedRelief : level(values[1]));
         float fearBefore = values[0];
-        if (values[0] < target) values[0] = Math.min(target, values[0] + (critical ? 10 : unsafe ? 9 : 8));
-        else values[0] = Math.max(target, values[0] - FEAR_RECOVERY[relief]);
+        if (values[0] < target) values[0] = Math.min(target, values[0] + (critical ? 10 : unsafe ? 9 : 8) * courage);
+        else values[0] = Math.max(target, values[0] - FEAR_RECOVERY[relief]
+                - (float) Courage.value(player, Courage.FEAR_RECOVERY));
         // Only fear that is rising counts, so a monster wandering in and out of range while fear decays gives no new relief.
         if (threatened && values[0] > fearBefore) peakFear = Math.max(peakFear, values[0]);
         long currentFootStatCm = footStats(player);
@@ -97,7 +101,9 @@ final class MoodState {
         lastFootStatCm = currentFootStatCm;
         rest(player, still);
         if (wasThreatened && !threatened) {
-            move(1, RELIEF_GAIN[Math.min(3, level(peakFear))]);
+            int escapedStage = Math.min(3, level(peakFear));
+            move(1, RELIEF_GAIN[escapedStage]);
+            Courage.onEscape(player, escapedStage);
             peakFear = 0;
         } else {
             move(1, threatened ? -8 : -2);
@@ -128,8 +134,10 @@ final class MoodState {
         lastFootStatCm = footStats(player);
     }
 
-    void onHurt(float damage) {
-        values[0] = Math.min(84, values[0] + Math.min(30, 10 + damage * 3));
+    void onHurt(ServerPlayer player, float damage) {
+        float courage = (1 - Courage.fearResistance(player))
+                * (1 - (float) Math.min(1, Courage.value(player, Courage.FEAR_DAMAGE_RESISTANCE)));
+        values[0] = Math.min(84, values[0] + Math.min(30, 10 + damage * 3) * courage);
         if (wasThreatened) peakFear = Math.max(peakFear, values[0]);
     }
 

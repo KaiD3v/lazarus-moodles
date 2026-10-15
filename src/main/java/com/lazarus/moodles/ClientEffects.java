@@ -121,9 +121,11 @@ public final class ClientEffects {
 
         int exhausted = exhausted(player);
         shownTired += Mth.clamp(TIRED_VIGNETTE_STRENGTH[exhausted] - shownTired, -0.005f, 0.005f);
-        float strength = SWAY_DEGREES[fear] + EXHAUSTED_SWAY_DEGREES[exhausted];
+        // Courage (Mãos Firmes) weakens only the fear part of the sway.
+        float steady = 1.0f - (float) Math.min(1, Courage.value(player, Courage.FEAR_STEADINESS));
+        float strength = SWAY_DEGREES[fear] * steady + EXHAUSTED_SWAY_DEGREES[exhausted];
         if (unsettledTicks > 0) strength *= 1.0f + 0.6f * unsettledTicks / 45f;
-        float tremor = TREMOR_DEGREES[fear];
+        float tremor = TREMOR_DEGREES[fear] * steady;
         strength *= 1.0f - RELIEVED_STEADY[relief];
         tremor *= 1.0f - RELIEVED_STEADY[relief];
         int t = player.tickCount;

@@ -1,0 +1,12 @@
+{
+  "title": "Coragem",
+  "description": "Sobe ao escapar do medo, ao matar com medo e a cada dia vivo.",
+  "icon": {
+    "type": "item",
+    "data": {
+      "item": "minecraft:shield"
+    }
+  },
+  "background": "textures/gui/advancements/backgrounds/stone.png",
+  "unlocked_by_default": true
+}

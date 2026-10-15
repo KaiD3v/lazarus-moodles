@@ -4,5 +4,11 @@
   "moodle.lazarusmoodles.panicked": "Panicked",
   "moodle.lazarusmoodles.fearful": "Fearful",
   "moodle.lazarusmoodles.tense": "Tense",
-  "moodle.lazarusmoodles.exhausted": "Exhausted"
+  "moodle.lazarusmoodles.exhausted": "Exhausted",
+  "attribute.name.lazarusmoodles.fear_resistance": "Fear Resistance",
+  "attribute.name.lazarusmoodles.fear_damage_resistance": "Fear from Damage Resistance",
+  "attribute.name.lazarusmoodles.dark_immunity": "Darkness Composure",
+  "attribute.name.lazarusmoodles.fear_recovery": "Fear Recovery",
+  "attribute.name.lazarusmoodles.fear_steadiness": "Steady Hands",
+  "attribute.name.lazarusmoodles.panic_threshold": "Panic Threshold"
 }

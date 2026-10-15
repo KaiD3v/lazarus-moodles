@@ -8,6 +8,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
@@ -29,7 +31,7 @@ import java.util.function.Supplier;
 @Mod(LazarusMoodles.ID)
 public class LazarusMoodles {
     public static final String ID = "lazarusmoodles";
-    private static final String VERSION = "11";
+    private static final String VERSION = "12";
     private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, ID);
     static final RegistryObject<SoundEvent> PANICKED_BREATH = SOUNDS.register("panicked_breath",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "panicked_breath")));
@@ -52,6 +54,7 @@ public class LazarusMoodles {
 
     public LazarusMoodles() {
         SOUNDS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        Courage.register(FMLJavaModLoadingContext.get().getModEventBus());
         CHANNEL.registerMessage(0, MoodPacket.class, MoodPacket::encode, MoodPacket::decode,
                 MoodPacket::handle, OptionalDirection.CLIENTBOUND);
         MinecraftForge.EVENT_BUS.register(this);
@@ -73,10 +76,19 @@ public class LazarusMoodles {
     public void onHurt(LivingHurtEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player) || event.getAmount() <= 0) return;
         MoodState state = MoodState.load(player);
-        state.onHurt(event.getAmount());
+        state.onHurt(player, event.getAmount());
         MoodState.markAcutePain(player);
         state.save(player);
         sync(player, state);
+    }
+
+    // Killing a monster while Fearful or Panicked builds courage.
+    @SubscribeEvent
+    public void onKill(LivingDeathEvent event) {
+        if (event.getEntity() instanceof Monster && event.getSource().getEntity() instanceof ServerPlayer player
+                && MoodEffects.fear(player) >= 2) {
+            Courage.grant(player, 1);
+        }
     }
 
     @SubscribeEvent
