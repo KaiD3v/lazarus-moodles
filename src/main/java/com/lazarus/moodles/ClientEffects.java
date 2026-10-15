@@ -125,7 +125,9 @@ public final class ClientEffects {
         float steady = 1.0f - (float) Math.min(1, Courage.value(player, Courage.FEAR_STEADINESS));
         float strength = SWAY_DEGREES[fear] * steady + EXHAUSTED_SWAY_DEGREES[exhausted];
         if (unsettledTicks > 0) strength *= 1.0f + 0.6f * unsettledTicks / 45f;
-        float tremor = TREMOR_DEGREES[fear] * steady;
+        boolean withdrawal = playing(player) && ClientOverlay.level(5) > 0;
+        // Withdrawal: shaky hands even without fear.
+        float tremor = TREMOR_DEGREES[fear] * steady + (withdrawal ? 0.3f : 0);
         strength *= 1.0f - RELIEVED_STEADY[relief];
         tremor *= 1.0f - RELIEVED_STEADY[relief];
         int t = player.tickCount;
@@ -148,14 +150,17 @@ public final class ClientEffects {
             // The longest take is 3 s (60 ticks), so Panicked always leaves at least half a second of silence.
             breathCooldown = fear == 3 ? 70 + random.nextInt(61) : 120 + random.nextInt(121);
         }
-        if (BEAT_TICKS[fear] > 0 && beatCooldown == 0) {
+        // Withdrawal makes the heartbeat audible already at Tense.
+        int beatTicks = withdrawal && fear == 1 ? 18 : BEAT_TICKS[fear];
+        float beatVolume = withdrawal && fear == 1 ? 0.35f : BEAT_VOLUME[fear];
+        if (beatTicks > 0 && beatCooldown == 0) {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(LazarusMoodles.HEARTBEAT.get(),
-                    fear == 3 ? 1.1f : 1.0f, BEAT_VOLUME[fear]));
-            beatCooldown = lastBeatInterval = BEAT_TICKS[fear];
-            lastBeatVolume = BEAT_VOLUME[fear];
+                    fear == 3 ? 1.1f : 1.0f, beatVolume));
+            beatCooldown = lastBeatInterval = beatTicks;
+            lastBeatVolume = beatVolume;
             calmBeatTicks = CALM_BEAT_TICKS;
             ticksSinceBeat = 0;
-        } else if (BEAT_TICKS[fear] == 0 && calmBeatTicks > 0) {
+        } else if (beatTicks == 0 && calmBeatTicks > 0) {
             // When fear fades, the heart keeps beating for a few seconds, slowing down and getting quieter.
             calmBeatTicks--;
             if (beatCooldown == 0) {
@@ -205,12 +210,13 @@ public final class ClientEffects {
         RandomSource random = player.getRandom();
         if (blinkTicks >= 0) {
             if (++blinkTicks > blinkLength) blinkTicks = -1;
-        } else if (exhausted >= 3 && --nextBlink <= 0) {
+        } else if ((exhausted >= 3 || sedated(player)) && --nextBlink <= 0) {
             // Fear keeps the player awake, so microsleeps only happen when calm.
             microsleep = exhausted == 5 && fear == 0 && random.nextFloat() < 0.1f;
             blinkLength = microsleep ? 30 : 7;
             blinkTicks = 0;
-            nextBlink = exhausted == 3 ? 400 + random.nextInt(400)
+            // Sedation alone gives occasional drowsy blinks, like Exhausted 3.
+            nextBlink = exhausted <= 3 ? 400 + random.nextInt(400)
                     : exhausted == 4 ? 200 + random.nextInt(300) : 120 + random.nextInt(180);
         }
 
@@ -241,6 +247,14 @@ public final class ClientEffects {
         float t = Math.min(1, (blinkTicks + partialTick) / blinkLength);
         if (!microsleep) return Mth.sin(t * Mth.PI);
         return t < 0.25f ? t / 0.25f : t > 0.8f ? (1 - t) / 0.2f : 1;
+    }
+
+    private static boolean playing(LocalPlayer player) {
+        return !player.isCreative() && !player.isSpectator();
+    }
+
+    private static boolean sedated(LocalPlayer player) {
+        return playing(player) && ClientOverlay.level(4) > 0;
     }
 
     private static int exhausted(LocalPlayer player) {

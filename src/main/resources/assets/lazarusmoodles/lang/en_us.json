@@ -10,5 +10,10 @@
   "attribute.name.lazarusmoodles.dark_immunity": "Darkness Composure",
   "attribute.name.lazarusmoodles.fear_recovery": "Fear Recovery",
   "attribute.name.lazarusmoodles.fear_steadiness": "Steady Hands",
-  "attribute.name.lazarusmoodles.panic_threshold": "Panic Threshold"
+  "attribute.name.lazarusmoodles.panic_threshold": "Panic Threshold",
+  "moodle.lazarusmoodles.sedated": "Sedated",
+  "moodle.lazarusmoodles.withdrawal": "Withdrawal",
+  "item.lazarusmoodles.sedatives": "Sedatives",
+  "item.lazarusmoodles.sedatives.desc1": "Suppresses all fear for about 3 minutes.",
+  "item.lazarusmoodles.sedatives.desc2": "Then withdrawal: stronger fear, shaky hands, fatigue."
 }

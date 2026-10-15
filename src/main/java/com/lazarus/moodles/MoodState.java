@@ -10,12 +10,13 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.stats.Stats;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
 final class MoodState {
     static final String TAG = "LazarusMoodles";
-    static final int COUNT = 4;
+    static final int COUNT = 6;
     private static final String[] KEYS = {"Stress", "Relieved"};
     private static final long CM_PER_LEVEL = 100_000;
     private static final long MAX_FOOT_DISTANCE_CM = 5 * CM_PER_LEVEL;
@@ -29,6 +30,20 @@ final class MoodState {
     private static final int BED_RESET_SECONDS = 120;
     private static final int REST_LEVEL_SECONDS = 60;
     private static final int REST_MIN_LEVEL = 2;
+    // Threat detection: monsters only count within 18 blocks horizontally and about two floors vertically,
+    // and only if seen, chasing the player, or right next to them on the same level.
+    private static final double THREAT_RADIUS = 18;
+    private static final double THREAT_VERTICAL = 6;
+    private static final double CLOSE_DISTANCE_SQR = 5 * 5;
+    private static final double CLOSE_VERTICAL = 2;
+    // A monster seen recently keeps counting, so losing sight of a chaser around a corner is not an escape.
+    private static final long SEEN_MEMORY_TICKS = 100;
+    // Relief needs this many seconds in a row without a threat.
+    private static final int ESCAPE_CONFIRM_SECONDS = 3;
+    private static final Map<ServerPlayer, Map<Integer, Long>> LAST_SEEN = new WeakHashMap<>();
+    private static final Map<ServerPlayer, Integer> CLEAR_SECONDS = new WeakHashMap<>();
+    // Last threat breakdown per player for /lm status: seen, chasing, close, remembered.
+    private static final Map<ServerPlayer, int[]> LAST_THREATS = new WeakHashMap<>();
     private static final ResourceLocation[] PAINKILLERS = {
             new ResourceLocation("legendarysurvivaloverhaul", "painkiller"),
             new ResourceLocation("apocalypsenow", "painkillerseffect")};
@@ -36,7 +51,19 @@ final class MoodState {
     private static final float[] RELIEF_GAIN = {0, 20, 40, 70};
     // Fear recovery per second at Relieved 0..4.
     private static final float[] FEAR_RECOVERY = {5, 7, 8, 9, 10};
+    // Sedatives: 3 min with no fear, then 5 min of withdrawal. Each dose within one game day of the previous one adds
+    // tolerance (up to 4): the effect lasts 25% less and the withdrawal 50% longer per point.
+    private static final int SEDATED_SECONDS = 180;
+    private static final int WITHDRAWAL_SECONDS = 300;
+    private static final int MAX_TOLERANCE = 4;
+    private static final long TOLERANCE_WINDOW_TICKS = 24000;
     private final float[] values = new float[KEYS.length];
+    private int sedatedSeconds;
+    private int withdrawalSeconds;
+    // Withdrawal length decided when the dose was taken, applied when the sedation ends.
+    private int pendingWithdrawalSeconds;
+    private int tolerance;
+    private long lastDoseTime = Long.MIN_VALUE / 2;
     private boolean wasThreatened;
     // Highest fear reached while it was rising during the current threat; cleared when relief is granted.
     private float peakFear;
@@ -56,6 +83,11 @@ final class MoodState {
         state.values[0] = Math.min(84, state.values[0]);
         state.wasThreatened = tag.getBoolean("WasThreatened");
         state.peakFear = tag.getFloat("PeakFear");
+        state.sedatedSeconds = tag.getInt("SedatedSeconds");
+        state.withdrawalSeconds = tag.getInt("WithdrawalSeconds");
+        state.pendingWithdrawalSeconds = tag.getInt("PendingWithdrawalSeconds");
+        state.tolerance = tag.getInt("SedativeTolerance");
+        if (tag.contains("LastDoseTime")) state.lastDoseTime = tag.getLong("LastDoseTime");
         state.footDistanceCm = Math.max(0, Math.min(MAX_FOOT_DISTANCE_CM, tag.getLong("FootDistanceCm")));
         state.lastFootStatCm = tag.contains("LastFootStatCm")
                 ? tag.getLong("LastFootStatCm") : footStats(player);
@@ -67,14 +99,18 @@ final class MoodState {
         for (int i = 0; i < values.length; i++) tag.putFloat(KEYS[i], values[i]);
         tag.putBoolean("WasThreatened", wasThreatened);
         tag.putFloat("PeakFear", peakFear);
+        tag.putInt("SedatedSeconds", sedatedSeconds);
+        tag.putInt("WithdrawalSeconds", withdrawalSeconds);
+        tag.putInt("PendingWithdrawalSeconds", pendingWithdrawalSeconds);
+        tag.putInt("SedativeTolerance", tolerance);
+        tag.putLong("LastDoseTime", lastDoseTime);
         tag.putLong("FootDistanceCm", footDistanceCm);
         tag.putLong("LastFootStatCm", lastFootStatCm);
         player.getPersistentData().put(TAG, tag);
     }
 
     void update(ServerPlayer player) {
-        int nearby = player.serverLevel().getEntitiesOfClass(Monster.class,
-                player.getBoundingBox().inflate(18), Monster::isAlive).size();
+        int nearby = countThreats(player);
         int light = player.serverLevel().getMaxLocalRawBrightness(player.blockPosition());
         float health = player.getHealth() / player.getMaxHealth();
         boolean threatened = nearby > 0;
@@ -83,13 +119,25 @@ final class MoodState {
         boolean unsafe = nearby >= 3 || health < 0.45f;
         boolean dark = light < 4 && Courage.value(player, Courage.DARK_IMMUNITY) < 0.5;
         float target = critical ? 84 : unsafe ? 59 : threatened || dark ? 34 : 0;
-        float courage = 1 - Courage.fearResistance(player);
+        float riseRate = 1 - Courage.fearResistance(player);
         int forcedRelief = testLevel(player, 2);
         int relief = Math.min(4, forcedRelief >= 0 ? forcedRelief : level(values[1]));
+        tickSedatives();
+        boolean sedated = effective(player, 4, sedatedSeconds);
+        boolean withdrawal = effective(player, 5, withdrawalSeconds);
+        // Withdrawal: rebound anxiety makes fear rise 50% faster and fade 2 points per second slower.
+        if (withdrawal) riseRate *= 1.5f;
+        float recovery = FEAR_RECOVERY[relief] + (float) Courage.value(player, Courage.FEAR_RECOVERY) - (withdrawal ? 2 : 0);
         float fearBefore = values[0];
-        if (values[0] < target) values[0] = Math.min(target, values[0] + (critical ? 10 : unsafe ? 9 : 8) * courage);
-        else values[0] = Math.max(target, values[0] - FEAR_RECOVERY[relief]
-                - (float) Courage.value(player, Courage.FEAR_RECOVERY));
+        if (sedated) {
+            // Sedated: fear drains within a couple of seconds and cannot rise; no peak means no relief or courage XP.
+            values[0] = Math.max(0, values[0] - 50);
+            peakFear = 0;
+        } else if (values[0] < target) {
+            values[0] = Math.min(target, values[0] + (critical ? 10 : unsafe ? 9 : 8) * riseRate);
+        } else {
+            values[0] = Math.max(target, values[0] - Math.max(1, recovery));
+        }
         // Only fear that is rising counts, so a monster wandering in and out of range while fear decays gives no new relief.
         if (threatened && values[0] > fearBefore) peakFear = Math.max(peakFear, values[0]);
         long currentFootStatCm = footStats(player);
@@ -100,15 +148,54 @@ final class MoodState {
         }
         lastFootStatCm = currentFootStatCm;
         rest(player, still);
-        if (wasThreatened && !threatened) {
+        // wasThreatened stays set until the escape is confirmed by several seconds without any threat.
+        int clear = threatened ? 0 : CLEAR_SECONDS.getOrDefault(player, 0) + 1;
+        CLEAR_SECONDS.put(player, clear);
+        if (threatened) {
+            wasThreatened = true;
+            move(1, -8);
+        } else if (wasThreatened && clear >= ESCAPE_CONFIRM_SECONDS) {
             int escapedStage = Math.min(3, level(peakFear));
             move(1, RELIEF_GAIN[escapedStage]);
             Courage.onEscape(player, escapedStage);
             peakFear = 0;
+            wasThreatened = false;
         } else {
-            move(1, threatened ? -8 : -2);
+            move(1, -2);
         }
-        wasThreatened = threatened;
+    }
+
+    private static int countThreats(ServerPlayer player) {
+        long now = player.level().getGameTime();
+        Map<Integer, Long> seenAt = LAST_SEEN.computeIfAbsent(player, ignored -> new HashMap<>());
+        int[] kinds = new int[4];
+        int count = 0;
+        for (Monster monster : player.serverLevel().getEntitiesOfClass(Monster.class,
+                player.getBoundingBox().inflate(THREAT_RADIUS, THREAT_VERTICAL, THREAT_RADIUS), Monster::isAlive)) {
+            double dy = Math.abs(monster.getY() - player.getY());
+            int kind;
+            if (player.hasLineOfSight(monster)) {
+                seenAt.put(monster.getId(), now);
+                kind = 0;
+            } else if (monster.getTarget() == player) {
+                kind = 1;
+            } else if (monster.distanceToSqr(player) <= CLOSE_DISTANCE_SQR && dy <= CLOSE_VERTICAL) {
+                kind = 2;
+            } else if (now - seenAt.getOrDefault(monster.getId(), Long.MIN_VALUE / 2) <= SEEN_MEMORY_TICKS) {
+                kind = 3;
+            } else {
+                continue;
+            }
+            kinds[kind]++;
+            count++;
+        }
+        seenAt.values().removeIf(time -> now - time > SEEN_MEMORY_TICKS);
+        LAST_THREATS.put(player, kinds);
+        return count;
+    }
+
+    static int[] lastThreats(ServerPlayer player) {
+        return LAST_THREATS.getOrDefault(player, new int[4]);
     }
 
     // On servers the night rarely gets skipped, so two minutes in bed count as a full sleep.
@@ -135,6 +222,7 @@ final class MoodState {
     }
 
     void onHurt(ServerPlayer player, float damage) {
+        if (effective(player, 4, sedatedSeconds)) return;
         float courage = (1 - Courage.fearResistance(player))
                 * (1 - (float) Math.min(1, Courage.value(player, Courage.FEAR_DAMAGE_RESISTANCE)));
         values[0] = Math.min(84, values[0] + Math.min(30, 10 + damage * 3) * courage);
@@ -152,11 +240,39 @@ final class MoodState {
         if (ACUTE_PAIN_UNTIL.getOrDefault(player, 0L) > player.level().getGameTime()) pain = Math.min(3, pain + 1);
         if (onPainkillers(player)) pain = Math.max(0, pain - 2);
         levels[3] = (byte) pain;
+        levels[4] = (byte) (sedatedSeconds > 0 ? 1 : 0);
+        levels[5] = (byte) (withdrawalSeconds > 0 ? 1 : 0);
+        // The crash after sedatives adds one temporary Exhausted level.
+        if (effective(player, 5, withdrawalSeconds)) levels[1] = (byte) Math.min(5, levels[1] + 1);
         for (int i = 0; i < COUNT; i++) {
             int forced = testLevel(player, i);
             if (forced >= 0) levels[i] = (byte) forced;
         }
         return levels;
+    }
+
+    private void tickSedatives() {
+        if (sedatedSeconds > 0 && --sedatedSeconds == 0) {
+            withdrawalSeconds = pendingWithdrawalSeconds;
+            pendingWithdrawalSeconds = 0;
+        } else if (withdrawalSeconds > 0) {
+            withdrawalSeconds--;
+        }
+    }
+
+    private static boolean effective(ServerPlayer player, int index, int seconds) {
+        int forced = testLevel(player, index);
+        return forced >= 0 ? forced > 0 : seconds > 0;
+    }
+
+    // A dose (also during withdrawal, which it ends) restarts the sedation; tolerance grows with frequent use.
+    void takeSedative(ServerPlayer player) {
+        long now = player.level().getGameTime();
+        tolerance = now - lastDoseTime < TOLERANCE_WINDOW_TICKS ? Math.min(MAX_TOLERANCE, tolerance + 1) : 0;
+        lastDoseTime = now;
+        sedatedSeconds = (int) Math.round(SEDATED_SECONDS * Math.pow(0.75, tolerance));
+        pendingWithdrawalSeconds = (int) Math.round(WITHDRAWAL_SECONDS * Math.pow(1.5, tolerance));
+        withdrawalSeconds = 0;
     }
 
     static void markAcutePain(ServerPlayer player) {

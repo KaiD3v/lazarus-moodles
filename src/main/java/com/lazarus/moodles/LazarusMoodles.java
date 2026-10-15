@@ -4,6 +4,9 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -31,7 +34,9 @@ import java.util.function.Supplier;
 @Mod(LazarusMoodles.ID)
 public class LazarusMoodles {
     public static final String ID = "lazarusmoodles";
-    private static final String VERSION = "12";
+    private static final String VERSION = "13";
+    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, ID);
+    static final RegistryObject<Item> SEDATIVES = ITEMS.register("sedatives", SedativesItem::new);
     private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, ID);
     static final RegistryObject<SoundEvent> PANICKED_BREATH = SOUNDS.register("panicked_breath",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "panicked_breath")));
@@ -54,6 +59,10 @@ public class LazarusMoodles {
 
     public LazarusMoodles() {
         SOUNDS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
+        FMLJavaModLoadingContext.get().getModEventBus().addListener((BuildCreativeModeTabContentsEvent event) -> {
+            if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS) event.accept(SEDATIVES);
+        });
         Courage.register(FMLJavaModLoadingContext.get().getModEventBus());
         CHANNEL.registerMessage(0, MoodPacket.class, MoodPacket::encode, MoodPacket::decode,
                 MoodPacket::handle, OptionalDirection.CLIENTBOUND);

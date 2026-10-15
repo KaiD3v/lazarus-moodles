@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 1.11.1" src="https://img.shields.io/badge/vers%C3%A3o-1.11.1-6b5b3e">
+  <img alt="Versão 1.13.0" src="https://img.shields.io/badge/vers%C3%A3o-1.13.0-6b5b3e">
 </p>
 
 # Lazarus Moodles
@@ -26,6 +26,7 @@ Não são só números numa barra. Quando o personagem entra em pânico, você o
   - [Dor: Pain](#dor-pain)
   - [Exaustão: Exhausted](#exaustão-exhausted)
   - [Alívio: Relieved](#alívio-relieved)
+  - [Calmantes: Sedated e Withdrawal](#calmantes-sedated-e-withdrawal)
 - [Árvore de habilidades Coragem](#árvore-de-habilidades-coragem)
 - [HUD](#hud)
 - [Integrações opcionais](#integrações-opcionais)
@@ -41,7 +42,15 @@ Não são só números numa barra. Quando o personagem entra em pânico, você o
 
 ### Medo: Tense → Fearful → Panicked
 
-Um único moodle de medo com três estágios. A cada segundo o servidor avalia monstros num raio de 18 blocos, a luz no seu bloco e a sua vida:
+Um único moodle de medo com três estágios. A cada segundo o servidor avalia os monstros ao redor, a luz no seu bloco e a sua vida.
+
+Um monstro só conta se estiver a até 18 blocos na horizontal e a até ~6 blocos de altura (cerca de dois andares), **e** se atender a pelo menos uma destas condições:
+- o personagem **consegue vê-lo** (paredes, pisos e tetos bloqueiam a visão);
+- ele **está te perseguindo**;
+- ele está **colado em você**, a até 5 blocos e no mesmo nível, como um zumbi atrás da porta;
+- você o **viu nos últimos 5 segundos**, então perder um perseguidor de vista numa esquina não acalma o personagem.
+
+Zumbis em cavernas, no esgoto ou em outros andares de um prédio não causam mais medo.
 
 | Situação | Estágio alcançado |
 |---|---|
@@ -112,11 +121,21 @@ Aparece quando você **escapa de monstros**, e a força depende do medo que voc�
 | Panicked | +70 |
 | Sem medo | nada |
 
-Só conta o medo que realmente subiu durante a ameaça. Um zumbi que entra e sai do raio não gera alívio repetido.
+Só conta o medo que realmente subiu durante a ameaça. Um zumbi que entra e sai do raio não gera alívio repetido. A fuga só é confirmada depois de 3 segundos seguidos sem nenhuma ameaça.
 
 **Bônus por nível (1 a 4):** o medo cai 7/8/9/10 por segundo, em vez de 5. A mira fica 20/30/40/50% mais firme. A regeneração de stamina sobe 5/10/15/20%.
 
 **Imersão:** um suspiro de alívio, uma ou duas respirações calmas, o coração desacelerando aos poucos até silenciar e a visão se abrindo levemente por alguns segundos.
+
+### Calmantes: Sedated e Withdrawal
+
+O item **Sedatives** (frasco de comprimidos) aparece em hospitais, farmácias, criados-mudos, kits e airdrops médicos e com saqueadores, soldados e zumbis com roupa de hospital. Ele aparece nas mesmas listas de loot das Pain Pills do Marbled, com um terço da chance delas.
+
+- **Sedated (~3 min):** o medo vai a zero em 1–2 segundos e não sobe durante o efeito. Somem o coração, a respiração, a borda vermelha e a mira trêmula do medo. Não há alívio nem XP de Coragem, porque não houve medo. O personagem pisca de sono de vez em quando.
+- **Withdrawal (~5 min, logo depois):** ansiedade de rebote. O medo sobe 50% mais rápido e cai 2 pontos por segundo mais devagar, o coração já bate audível em Tense, as mãos tremem (+0,3° na mira) e a exaustão sobe 1 nível temporariamente.
+- **Tolerância:** cada dose tomada menos de um dia de jogo (20 min) depois da anterior soma 1 de tolerância, até 4. Por ponto, o efeito dura 25% menos e a abstinência 50% mais. Tomar outra dose durante a abstinência acaba com ela, mas aumenta a tolerância. Ficar um dia sem tomar zera a tolerância.
+- Os estados ficam salvos no personagem e **não são efeitos de poção**, então leite e pílulas curativas não os removem.
+- Tomar o calmante dá 3 de XP em Medicina.
 
 ---
 
@@ -160,7 +179,7 @@ O XP de fuga tem intervalo mínimo de 2 minutos, e fugas em Tense não dão XP, 
 
 Os moodles ativos ficam empilhados no lado direito da tela, como ícones de 20px:
 
-- A **cor do quadrado** mostra a gravidade. Nos moodles ruins ela vai do amarelo ao laranja e ao vermelho; no Relieved, ao verde.
+- A **cor do quadrado** mostra a gravidade. Nos moodles ruins ela vai do amarelo ao laranja e ao vermelho; no Relieved, ao verde. Sedated é azul-esverdeado e Withdrawal é roxo.
 - O **nome** aparece só quando o moodle surge ou muda de nível e some depois de ~3 segundos.
 - Ícones estáveis ficam com 65% de opacidade, para não poluir a tela.
 - **F1** esconde tudo.
@@ -199,7 +218,9 @@ Comandos de operador (permissão 2). Os níveis forçados são temporários e n�
 | `/lm pain 0..3` | Força a dor |
 | `/lm exhausted 0..5` | Força a exaustão |
 | `/lm relieved 0..4` | Força o alívio |
-| `/lm status` | Mostra os níveis atuais e quais estão forçados |
+| `/lm sedated 0..1` | Força o efeito do calmante |
+| `/lm withdrawal 0..1` | Força a abstinência |
+| `/lm status` | Mostra os níveis atuais, quais estão forçados e quantos monstros estão causando medo (vistos, perseguindo, colados e lembrados) |
 | `/lm clear [moodle]` | Remove todos os níveis forçados, ou só o de um moodle |
 
 `/lazarusmoodles` é um alias de `/lm`.
@@ -229,7 +250,7 @@ Ligado aos estágios da infecção do **The Hordes**, a infecção do modpack. C
 ### Jogadores (single player ou cliente)
 
 1. Instale o Forge 1.20.1, pelo [instalador oficial](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.20.1.html) ou criando um perfil Forge no CurseForge.
-2. Baixe o JAR mais recente em [`dist/`](dist/), atualmente [`lazarusmoodles-1.11.1.jar`](dist/lazarusmoodles-1.11.1.jar).
+2. Baixe o JAR mais recente em [`dist/`](dist/), atualmente [`lazarusmoodles-1.13.0.jar`](dist/lazarusmoodles-1.13.0.jar).
 3. Coloque o arquivo na pasta `mods` do perfil:
    - **CurseForge:** clique com o botão direito no perfil → *Open Folder* → `mods`
    - **Launcher oficial:** `%appdata%\.minecraft\mods`

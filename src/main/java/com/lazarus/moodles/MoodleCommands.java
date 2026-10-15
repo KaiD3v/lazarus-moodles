@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 final class MoodleCommands {
-    private static final String[] NAMES = {"fear", "exhausted", "relieved", "pain"};
+    private static final String[] NAMES = {"fear", "exhausted", "relieved", "pain", "sedated", "withdrawal"};
 
     private MoodleCommands() {}
 
@@ -22,13 +22,17 @@ final class MoodleCommands {
                 .then(category("exhausted", 1, 5))
                 .then(category("relieved", 2, 4))
                 .then(category("pain", 3, 3))
+                .then(category("sedated", 4, 1))
+                .then(category("withdrawal", 5, 1))
                 .then(Commands.literal("status").executes(MoodleCommands::status))
                 .then(Commands.literal("clear")
                         .executes(context -> clear(context, -1))
                         .then(Commands.literal("fear").executes(context -> clear(context, 0)))
                         .then(Commands.literal("exhausted").executes(context -> clear(context, 1)))
                         .then(Commands.literal("relieved").executes(context -> clear(context, 2)))
-                        .then(Commands.literal("pain").executes(context -> clear(context, 3))));
+                        .then(Commands.literal("pain").executes(context -> clear(context, 3)))
+                        .then(Commands.literal("sedated").executes(context -> clear(context, 4)))
+                        .then(Commands.literal("withdrawal").executes(context -> clear(context, 5))));
         dispatcher.register(Commands.literal("lm")
                 .requires(source -> source.hasPermission(2) && source.getEntity() instanceof ServerPlayer)
                 .redirect(dispatcher.register(root)));
@@ -68,6 +72,9 @@ final class MoodleCommands {
             text.append(NAMES[i]).append('=').append(levels[i]);
             if (MoodState.testLevel(player, i) >= 0) text.append(" (test)");
         }
+        int[] threats = MoodState.lastThreats(player);
+        text.append(" | Threats: seen=").append(threats[0]).append(", chasing=").append(threats[1])
+                .append(", close=").append(threats[2]).append(", remembered=").append(threats[3]);
         context.getSource().sendSuccess(() -> Component.literal(text.toString()), false);
         return 1;
     }
