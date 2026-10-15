@@ -8,6 +8,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
@@ -22,7 +23,7 @@ import java.util.function.Supplier;
 @Mod(LazarusMoodles.ID)
 public class LazarusMoodles {
     public static final String ID = "lazarusmoodles";
-    private static final String VERSION = "4";
+    private static final String VERSION = "5";
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(ID, "moodles"), () -> VERSION, VERSION::equals, VERSION::equals);
 
@@ -47,6 +48,15 @@ public class LazarusMoodles {
         if (!(event.getEntity() instanceof ServerPlayer player) || event.getAmount() <= 0) return;
         MoodState state = MoodState.load(player);
         state.onHurt(event.getAmount());
+        state.save(player);
+        sync(player, state);
+    }
+
+    @SubscribeEvent
+    public void onWakeUp(PlayerWakeUpEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || player.getSleepTimer() < 100) return;
+        MoodState state = MoodState.load(player);
+        state.onSleep(player);
         state.save(player);
         sync(player, state);
     }

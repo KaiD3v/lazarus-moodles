@@ -40,7 +40,7 @@ public final class ClientOverlay {
             graphics.fill(x - 2, y - 2, x + 26, y + 26, 0xB0101511);
             graphics.blit(ICONS, x, y, 24, 24, (float) ((icon % 3) * 512),
                     (float) ((icon / 3) * 512), 512, 512, 1536, 1024);
-            int color = level == 4 ? 0xE06645 : level == 3 ? 0xD89A4C : 0xB8A675;
+            int color = level >= 5 ? 0xC94B43 : level == 4 ? 0xE06645 : level == 3 ? 0xD89A4C : 0xB8A675;
             for (int tick = 0; tick < level; tick++) graphics.fill(x - 3, y + 20 - tick * 5, x - 1, y + 23 - tick * 5, 0xFF000000 | color);
             Component label = Component.translatable("moodle.lazarusmoodles." + KEYS[icon]);
             String text = label.getString() + " " + level;
