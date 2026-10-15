@@ -36,12 +36,13 @@ public final class ClientOverlay {
         for (int i = 0; i < levels.length; i++) {
             int level = levels[i];
             if (level == 0) continue;
+            int icon = i == 0 ? level - 1 : i + 3;
             graphics.fill(x - 2, y - 2, x + 26, y + 26, 0xB0101511);
-            graphics.blit(ICONS, x, y, 24, 24, (float) ((i % 3) * 512),
-                    (float) ((i / 3) * 512), 512, 512, 1536, 1024);
+            graphics.blit(ICONS, x, y, 24, 24, (float) ((icon % 3) * 512),
+                    (float) ((icon / 3) * 512), 512, 512, 1536, 1024);
             int color = level == 4 ? 0xE06645 : level == 3 ? 0xD89A4C : 0xB8A675;
             for (int tick = 0; tick < level; tick++) graphics.fill(x - 3, y + 20 - tick * 5, x - 1, y + 23 - tick * 5, 0xFF000000 | color);
-            Component label = Component.translatable("moodle.lazarusmoodles." + KEYS[i]);
+            Component label = Component.translatable("moodle.lazarusmoodles." + KEYS[icon]);
             String text = label.getString() + " " + level;
             int labelX = x - 7 - mc.font.width(text);
             graphics.drawString(mc.font, text, labelX, y + 8, 0xFFE3DCC8, true);

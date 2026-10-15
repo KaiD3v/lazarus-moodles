@@ -6,8 +6,8 @@ import net.minecraft.world.entity.monster.Monster;
 
 final class MoodState {
     static final String TAG = "LazarusMoodles";
-    static final int COUNT = 6;
-    private static final String[] KEYS = {"Tense", "Fearful", "Panicked", "Irritated", "Exhausted", "Relieved"};
+    static final int COUNT = 3;
+    private static final String[] KEYS = {"Stress", "Exhausted", "Relieved"};
     private final float[] values = new float[COUNT];
     private boolean wasThreatened;
 
@@ -15,6 +15,12 @@ final class MoodState {
         MoodState state = new MoodState();
         CompoundTag tag = player.getPersistentData().getCompound(TAG);
         for (int i = 0; i < COUNT; i++) state.values[i] = tag.getFloat(KEYS[i]);
+        if (!tag.contains("Stress")) {
+            if (tag.getFloat("Irritated") >= 15) state.values[0] = 85;
+            else if (tag.getFloat("Panicked") >= 15) state.values[0] = 60;
+            else if (tag.getFloat("Fearful") >= 15) state.values[0] = 35;
+            else if (tag.getFloat("Tense") >= 15) state.values[0] = 15;
+        }
         state.wasThreatened = tag.getBoolean("WasThreatened");
         return state;
     }
@@ -32,23 +38,19 @@ final class MoodState {
         int light = player.serverLevel().getMaxLocalRawBrightness(player.blockPosition());
         float health = player.getHealth() / player.getMaxHealth();
         boolean threatened = nearby > 0;
+        boolean critical = nearby >= 6 || nearby >= 3 && health < 0.5f;
         boolean unsafe = nearby >= 3 || health < 0.45f;
-
-        move(0, threatened || light < 4 ? 8 : -5);
-        move(1, unsafe ? 9 : threatened ? 3 : -5);
-        move(2, nearby >= 6 || nearby >= 3 && health < 0.5f ? 10 : -7);
-        move(3, -2);
-        move(4, player.isSprinting() ? 4 : player.getFoodData().getFoodLevel() < 7 ? 2 : -3);
-        if (wasThreatened && !threatened) move(5, 35);
-        else move(5, threatened ? -8 : -2);
+        float target = critical ? 84 : unsafe ? 59 : threatened || light < 4 ? 34 : 0;
+        if (values[0] < target) values[0] = Math.min(target, values[0] + (critical ? 10 : unsafe ? 9 : 8));
+        else values[0] = Math.max(target, values[0] - 5);
+        move(1, player.isSprinting() ? 4 : player.getFoodData().getFoodLevel() < 7 ? 2 : -3);
+        if (wasThreatened && !threatened) move(2, 35);
+        else move(2, threatened ? -8 : -2);
         wasThreatened = threatened;
     }
 
     void onHurt(float damage) {
-        move(0, 12);
-        move(1, 9);
-        move(2, damage >= 5 ? 12 : 5);
-        move(3, Math.min(30, 10 + damage * 3));
+        move(0, Math.min(30, 10 + damage * 3));
     }
 
     byte[] levels() {
