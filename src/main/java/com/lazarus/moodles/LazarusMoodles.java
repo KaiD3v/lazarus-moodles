@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 @Mod(LazarusMoodles.ID)
 public class LazarusMoodles {
     public static final String ID = "lazarusmoodles";
-    private static final String VERSION = "14";
+    private static final String VERSION = "15";
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, ID);
     static final RegistryObject<Item> SEDATIVES = ITEMS.register("sedatives", SedativesItem::new);
     private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, ID);
@@ -54,6 +54,10 @@ public class LazarusMoodles {
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "calm_breath")));
     static final RegistryObject<SoundEvent> BLOOD_DRIP = SOUNDS.register("blood_drip",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "blood_drip")));
+    static final RegistryObject<SoundEvent> COUGH = SOUNDS.register("cough",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "cough")));
+    static final RegistryObject<SoundEvent> GAG = SOUNDS.register("gag",
+            () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "gag")));
     static final RegistryObject<SoundEvent> HEARTBEAT = SOUNDS.register("heartbeat",
             () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ID, "heartbeat")));
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(

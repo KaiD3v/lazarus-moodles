@@ -15,9 +15,9 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = LazarusMoodles.ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class ClientOverlay {
     private static final ResourceLocation ICONS = new ResourceLocation(LazarusMoodles.ID, "textures/gui/moodles.png");
-    private static final String[] KEYS = {"tense", "fearful", "panicked", "pain", "exhausted", "relieved", "sedated", "withdrawal", "bleeding"};
+    private static final String[] KEYS = {"tense", "fearful", "panicked", "pain", "exhausted", "relieved", "sedated", "withdrawal", "bleeding", "infected"};
     // Background color per level for fear, exhausted, relieved, pain, sedated, withdrawal: bad moodles go yellow to red,
-    // Relieved goes green, Sedated is teal, Withdrawal purple and Bleeding dark red.
+    // Relieved goes green, Sedated is teal, Withdrawal purple, Bleeding dark red and Infected sickly green.
     private static final int[][] COLORS = {
             {0xC9A23A, 0xD9702E, 0xC0392B},
             {0x8A8778, 0xC9A23A, 0xD08A34, 0xD9702E, 0xC0392B},
@@ -25,7 +25,8 @@ public final class ClientOverlay {
             {0xC9A23A, 0xD9702E, 0xC0392B},
             {0x3A9A9A},
             {0x8E3A6A},
-            {0x8B1E1E, 0xB01010}};
+            {0x8B1E1E, 0xB01010},
+            {0x8A9A4A, 0x7FA13A, 0x6E9F2E, 0x5C8F1E}};
     private static final int ICON = 20;
     private static final int SPACING = 24;
     // A moodle that appears or changes level is shown at full opacity with its name for this long, then fades.
@@ -68,14 +69,14 @@ public final class ClientOverlay {
         for (int i = 0; i < levels.length; i++) {
             int level = levels[i];
             if (level == 0) continue;
-            int icon = i == 0 ? level - 1 : i == 3 ? 3 : i == 4 ? 6 : i == 5 ? 7 : i == 6 ? 8 : i + 3;
+            int icon = i == 0 ? level - 1 : i == 3 ? 3 : i == 4 ? 6 : i == 5 ? 7 : i == 6 ? 8 : i == 7 ? 9 : i + 3;
             float fade = Mth.clamp((now - changedAt[i] - FRESH_MS) / (float) FADE_MS, 0, 1);
             float alpha = Mth.lerp(fade, 1.0f, STABLE_ALPHA);
             int color = COLORS[i][Math.min(level, COLORS[i].length) - 1];
             graphics.fill(x - 1, y - 1, x + ICON + 1, y + ICON + 1, (int) (0x90 * alpha) << 24 | color);
             graphics.setColor(1, 1, 1, alpha);
             graphics.blit(ICONS, x, y, ICON, ICON, (float) ((icon % 3) * 512),
-                    (float) ((icon / 3) * 512), 512, 512, 1536, 1536);
+                    (float) ((icon / 3) * 512), 512, 512, 1536, 2048);
             graphics.setColor(1, 1, 1, 1);
             // Text with alpha below 4 is drawn fully opaque by Minecraft, so faded labels are skipped instead.
             int labelAlpha = (int) (255 * (1 - fade));

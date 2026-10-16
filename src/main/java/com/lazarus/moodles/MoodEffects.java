@@ -72,7 +72,7 @@ final class MoodEffects {
         modifier(player, Attributes.MOVEMENT_SPEED, MOVEMENT_SPEED, "Lazarus exhaustion movement speed",
                 playing && exhaustion >= 4 ? (exhaustion == 5 ? -0.06 : -0.03) : 0);
         modifier(player, PEAK_STAMINA_REGEN, STAMINA_REGEN,
-                "Lazarus stamina recovery", playing ? -0.05 * exhaustion - 0.05 * pain + 0.05 * levels[2] - 0.10 * levels[6] : 0);
+                "Lazarus stamina recovery", playing ? -0.05 * exhaustion - 0.05 * pain + 0.05 * levels[2] - 0.10 * levels[6] - 0.05 * levels[7] : 0);
         modifier(player, PEAK_SPRINT_COST, SPRINT_COST,
                 "Lazarus sprint cost", playing ? 0.06 * exhaustion : 0);
         modifier(player, PEAK_MAX_STAMINA, MAX_STAMINA, "Lazarus exhaustion max stamina",

@@ -60,5 +60,19 @@
       "lazarusmoodles:blood_drip_3",
       "lazarusmoodles:blood_drip_4"
     ]
+  },
+  "cough": {
+    "sounds": [
+      "lazarusmoodles:cough_1",
+      "lazarusmoodles:cough_2",
+      "lazarusmoodles:cough_3",
+      "lazarusmoodles:cough_4"
+    ]
+  },
+  "gag": {
+    "sounds": [
+      "lazarusmoodles:gag_1",
+      "lazarusmoodles:gag_2"
+    ]
   }
 }

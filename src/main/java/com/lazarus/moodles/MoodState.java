@@ -3,6 +3,7 @@ package com.lazarus.moodles;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,7 +17,7 @@ import java.util.WeakHashMap;
 
 final class MoodState {
     static final String TAG = "LazarusMoodles";
-    static final int COUNT = 7;
+    static final int COUNT = 8;
     private static final String[] KEYS = {"Stress", "Relieved"};
     private static final long CM_PER_LEVEL = 100_000;
     private static final long MAX_FOOT_DISTANCE_CM = 5 * CM_PER_LEVEL;
@@ -49,6 +50,8 @@ final class MoodState {
     private static final ResourceLocation SEVERE_BLEEDING = new ResourceLocation("apocalypsenow", "severebleeding");
     // Seeing your own blood keeps fear at least at Tense (Bleeding 1) or Fearful (Bleeding 2).
     private static final float[] BLEEDING_FEAR_FLOOR = {0, 34, 59};
+    // The Hordes infection: the effect amplifier 0..3 is the stage, shown as Infected 1..4.
+    private static final ResourceLocation INFECTED = new ResourceLocation("hordes", "infected");
     private static final ResourceLocation[] PAINKILLERS = {
             new ResourceLocation("legendarysurvivaloverhaul", "painkiller"),
             new ResourceLocation("apocalypsenow", "painkillerseffect")};
@@ -125,6 +128,8 @@ final class MoodState {
         boolean dark = light < 4 && Courage.value(player, Courage.DARK_IMMUNITY) < 0.5;
         float target = critical ? 84 : unsafe ? 59 : threatened || dark ? 34 : 0;
         target = Math.max(target, BLEEDING_FEAR_FLOOR[bleeding(player)]);
+        // The last infection stage: knowing you are about to turn keeps fear at least at Tense.
+        if (infected(player) >= 4) target = Math.max(target, 34);
         float riseRate = 1 - Courage.fearResistance(player);
         int forcedRelief = testLevel(player, 2);
         int relief = Math.min(4, forcedRelief >= 0 ? forcedRelief : level(values[1]));
@@ -249,6 +254,7 @@ final class MoodState {
         levels[4] = (byte) (sedatedSeconds > 0 ? 1 : 0);
         levels[5] = (byte) (withdrawalSeconds > 0 ? 1 : 0);
         levels[6] = (byte) naturalBleeding(player);
+        levels[7] = (byte) naturalInfected(player);
         // The crash after sedatives adds one temporary Exhausted level.
         if (effective(player, 5, withdrawalSeconds)) levels[1] = (byte) Math.min(5, levels[1] + 1);
         for (int i = 0; i < COUNT; i++) {
@@ -266,6 +272,17 @@ final class MoodState {
     private static int naturalBleeding(Player player) {
         if (hasEffect(player, SEVERE_BLEEDING)) return 2;
         return hasEffect(player, BLEEDING) ? 1 : 0;
+    }
+
+    static int infected(ServerPlayer player) {
+        int forced = testLevel(player, 7);
+        return forced >= 0 ? forced : naturalInfected(player);
+    }
+
+    private static int naturalInfected(Player player) {
+        MobEffect effect = ForgeRegistries.MOB_EFFECTS.getValue(INFECTED);
+        MobEffectInstance instance = effect == null ? null : player.getEffect(effect);
+        return instance == null ? 0 : Math.min(4, instance.getAmplifier() + 1);
     }
 
     private static boolean hasEffect(Player player, ResourceLocation id) {

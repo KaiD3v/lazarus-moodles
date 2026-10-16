@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 final class MoodleCommands {
-    private static final String[] NAMES = {"fear", "exhausted", "relieved", "pain", "sedated", "withdrawal", "bleeding"};
+    private static final String[] NAMES = {"fear", "exhausted", "relieved", "pain", "sedated", "withdrawal", "bleeding", "infected"};
 
     private MoodleCommands() {}
 
@@ -25,6 +25,7 @@ final class MoodleCommands {
                 .then(category("sedated", 4, 1))
                 .then(category("withdrawal", 5, 1))
                 .then(category("bleeding", 6, 2))
+                .then(category("infected", 7, 4))
                 .then(Commands.literal("status").executes(MoodleCommands::status))
                 .then(Commands.literal("clear")
                         .executes(context -> clear(context, -1))
@@ -34,7 +35,8 @@ final class MoodleCommands {
                         .then(Commands.literal("pain").executes(context -> clear(context, 3)))
                         .then(Commands.literal("sedated").executes(context -> clear(context, 4)))
                         .then(Commands.literal("withdrawal").executes(context -> clear(context, 5)))
-                        .then(Commands.literal("bleeding").executes(context -> clear(context, 6))));
+                        .then(Commands.literal("bleeding").executes(context -> clear(context, 6)))
+                        .then(Commands.literal("infected").executes(context -> clear(context, 7))));
         dispatcher.register(Commands.literal("lm")
                 .requires(source -> source.hasPermission(2) && source.getEntity() instanceof ServerPlayer)
                 .redirect(dispatcher.register(root)));

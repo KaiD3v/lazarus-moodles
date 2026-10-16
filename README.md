@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 1.14.0" src="https://img.shields.io/badge/vers%C3%A3o-1.14.0-6b5b3e">
+  <img alt="Versão 1.15.0" src="https://img.shields.io/badge/vers%C3%A3o-1.15.0-6b5b3e">
 </p>
 
 # Lazarus Moodles
@@ -27,6 +27,7 @@ Não são só números numa barra. Quando o personagem entra em pânico, você o
   - [Exaustão: Exhausted](#exaustão-exhausted)
   - [Alívio: Relieved](#alívio-relieved)
   - [Sangramento: Bleeding](#sangramento-bleeding)
+  - [Infecção: Infected](#infecção-infected)
   - [Calmantes: Sedated e Withdrawal](#calmantes-sedated-e-withdrawal)
 - [Árvore de habilidades Coragem](#árvore-de-habilidades-coragem)
 - [HUD](#hud)
@@ -137,6 +138,17 @@ Aparece com o sangramento do **Apocalypse Now**: o sangramento normal é o níve
 - **Imersão:** borda vermelha de sangue pulsando com o coração, gotas de sangue pingando (quatro gravações) e, no sangramento grave, coração audível e a vista escurecendo aos poucos ao longo de um minuto, como se fosse desmaiar.
 - Bandagens e kits que curam o sangramento do Apocalypse Now encerram o moodle.
 
+### Infecção: Infected
+
+Acompanha a infecção do **The Hordes**. Cada um dos quatro estágios da infecção vira um nível do moodle (1 a 4); quando o último estágio termina, o personagem morre e vira zumbi. Os efeitos visuais da infecção continuam sendo os do próprio The Hordes (tela tingida e efeitos no último estágio), assim como a lentidão e a fome extra. O moodle acrescenta:
+
+- **Tosse** (quatro gravações), cada vez mais frequente: a cada 1–2 min no nível 1 até a cada 15–30 s no nível 4.
+- **Febre:** as mãos tremem na mira a partir do nível 2 (+0,1° / 0,2° / 0,3°).
+- **Náusea:** a partir do nível 3, ondas de enjoo balançam a câmera por 3 segundos de tempos em tempos; no nível 4 vêm acompanhadas de ânsia de vômito.
+- **Stamina:** regeneração −5% por nível.
+- **Medo de virar:** no último estágio, o medo fica pelo menos em Tense.
+- Os antibióticos e demais curas do The Hordes encerram o moodle.
+
 ### Calmantes: Sedated e Withdrawal
 
 O item **Sedatives** (frasco de comprimidos) aparece em hospitais, farmácias, criados-mudos, kits e airdrops médicos e com saqueadores, soldados e zumbis com roupa de hospital. Ele aparece nas mesmas listas de loot das Pain Pills do Marbled, com um terço da chance delas.
@@ -189,7 +201,7 @@ O XP de fuga tem intervalo mínimo de 2 minutos, e fugas em Tense não dão XP, 
 
 Os moodles ativos ficam empilhados no lado direito da tela, como ícones de 20px:
 
-- A **cor do quadrado** mostra a gravidade. Nos moodles ruins ela vai do amarelo ao laranja e ao vermelho; no Relieved, ao verde. Sedated é azul-esverdeado, Withdrawal é roxo e Bleeding é vermelho-escuro.
+- A **cor do quadrado** mostra a gravidade. Nos moodles ruins ela vai do amarelo ao laranja e ao vermelho; no Relieved, ao verde. Sedated é azul-esverdeado, Withdrawal é roxo, Bleeding é vermelho-escuro e Infected é verde-doentio.
 - O **nome** aparece só quando o moodle surge ou muda de nível e some depois de ~3 segundos.
 - Ícones estáveis ficam com 65% de opacidade, para não poluir a tela.
 - **F1** esconde tudo.
@@ -206,6 +218,7 @@ Nenhuma é obrigatória. Cada efeito é ativado só quando o mod correspondente 
 | **PeakStamina** | Regeneração, stamina máxima e custos de sprint, pulo e ataque |
 | **Legendary Survival Overhaul** | Sede extra com medo e exaustão; morfina contra a dor |
 | **Apocalypse Now** | Analgésico contra a dor; sangramento para o moodle Bleeding |
+| **The Hordes** | Estágios da infecção para o moodle Infected |
 | **Puffish Skills** | Árvore de habilidades Coragem |
 
 ---
@@ -231,6 +244,7 @@ Comandos de operador (permissão 2). Os níveis forçados são temporários e n�
 | `/lm sedated 0..1` | Força o efeito do calmante |
 | `/lm withdrawal 0..1` | Força a abstinência |
 | `/lm bleeding 0..2` | Força o sangramento (1 normal, 2 grave) |
+| `/lm infected 0..4` | Força o estágio da infecção |
 | `/lm status` | Mostra os níveis atuais, quais estão forçados e quantos monstros estão causando medo (vistos, perseguindo, colados e lembrados) |
 | `/lm clear [moodle]` | Remove todos os níveis forçados, ou só o de um moodle |
 
@@ -240,10 +254,7 @@ Comandos de operador (permissão 2). Os níveis forçados são temporários e n�
 
 ## Moodles futuros
 
-Planejado, aproveitando um sistema que o Project Lazarus já tem:
-
-### 🦠 Sick / Infected (Infectado)
-Ligado aos estágios da infecção do **The Hordes**, a infecção do modpack. Conforme a doença avança: tosse, febre com a visão turva e tremores, náusea e menos stamina. O objetivo é que você *sinta* a infecção e a urgência de encontrar antibióticos, em vez de só acompanhar uma barra.
+Ideias em estudo, aproveitando sistemas que o Project Lazarus já tem: **Deafened** (ensurdecido por tiros e explosões), **Startled** (susto repentino) e **Wet / Cold** (molhado e com frio, junto com a temperatura do Legendary Survival Overhaul).
 
 ---
 
@@ -258,7 +269,7 @@ Ligado aos estágios da infecção do **The Hordes**, a infecção do modpack. C
 ### Jogadores (single player ou cliente)
 
 1. Instale o Forge 1.20.1, pelo [instalador oficial](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.20.1.html) ou criando um perfil Forge no CurseForge.
-2. Baixe o JAR mais recente em [`dist/`](dist/), atualmente [`lazarusmoodles-1.14.0.jar`](dist/lazarusmoodles-1.14.0.jar).
+2. Baixe o JAR mais recente em [`dist/`](dist/), atualmente [`lazarusmoodles-1.15.0.jar`](dist/lazarusmoodles-1.15.0.jar).
 3. Coloque o arquivo na pasta `mods` do perfil:
    - **CurseForge:** clique com o botão direito no perfil → *Open Folder* → `mods`
    - **Launcher oficial:** `%appdata%\.minecraft\mods`

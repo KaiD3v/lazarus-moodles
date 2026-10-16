@@ -57,6 +57,11 @@ public final class ClientEffects {
     private static float shownBleeding;
     private static int severeBleedingTicks;
     private static int dripCooldown;
+    // Infected: coughing, and from level 3 nausea waves that rock the camera for a few seconds.
+    private static final int NAUSEA_TICKS = 60;
+    private static int coughCooldown = 200;
+    private static int nauseaCooldown = 600;
+    private static int nauseaTicks = -1;
     private static int lastRelief;
     private static int reliefTicks = 200;
     private static int sighCooldown;
@@ -97,6 +102,9 @@ public final class ClientEffects {
             lastPlayer = player;
             yawOffset = pitchOffset = shownFear = shownTired = shownBleeding = 0;
             severeBleedingTicks = dripCooldown = 0;
+            coughCooldown = 200;
+            nauseaCooldown = 600;
+            nauseaTicks = -1;
             lastRelief = sighCooldown = calmBreathsLeft = calmBeatTicks = 0;
             reliefTicks = 200;
             unsettledTicks = breathCooldown = beatCooldown = 0;
@@ -134,7 +142,9 @@ public final class ClientEffects {
         if (unsettledTicks > 0) strength *= 1.0f + 0.6f * unsettledTicks / 45f;
         boolean withdrawal = playing(player) && ClientOverlay.level(5) > 0;
         // Withdrawal: shaky hands even without fear.
-        float tremor = TREMOR_DEGREES[fear] * steady + (withdrawal ? 0.3f : 0);
+        int infected = playing(player) ? ClientOverlay.level(7) : 0;
+        // Withdrawal and fever (Infected 2+) make the hands shake even without fear.
+        float tremor = TREMOR_DEGREES[fear] * steady + (withdrawal ? 0.3f : 0) + 0.1f * Math.max(0, infected - 1);
         strength *= 1.0f - RELIEVED_STEADY[relief];
         tremor *= 1.0f - RELIEVED_STEADY[relief];
         int t = player.tickCount;
@@ -185,6 +195,7 @@ public final class ClientEffects {
         }
         tickRelief(mc, player, relief, fear);
         tickBleeding(mc, player, bleeding);
+        tickInfected(mc, player, infected);
         tickExhaustion(mc, player, exhausted, fear);
     }
 
@@ -197,6 +208,26 @@ public final class ClientEffects {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(LazarusMoodles.BLOOD_DRIP.get(),
                     0.9f + random.nextFloat() * 0.2f, bleeding == 2 ? 0.5f : 0.35f));
             dripCooldown = bleeding == 2 ? 40 + random.nextInt(60) : 80 + random.nextInt(100);
+        }
+    }
+
+    private static void tickInfected(Minecraft mc, LocalPlayer player, int infected) {
+        RandomSource random = player.getRandom();
+        if (nauseaTicks >= 0 && ++nauseaTicks > NAUSEA_TICKS) nauseaTicks = -1;
+        if (infected == 0) return;
+        if (--coughCooldown <= 0) {
+            mc.getSoundManager().play(SimpleSoundInstance.forUI(LazarusMoodles.COUGH.get(),
+                    0.92f + random.nextFloat() * 0.16f, 0.45f + 0.07f * infected));
+            int[] min = {0, 1200, 800, 500, 300};
+            coughCooldown = min[infected] + random.nextInt(min[infected]);
+        }
+        if (infected >= 3 && nauseaTicks < 0 && --nauseaCooldown <= 0) {
+            nauseaTicks = 0;
+            nauseaCooldown = (infected == 4 ? 800 : 1200) + random.nextInt(1200);
+            if (infected == 4) {
+                mc.getSoundManager().play(SimpleSoundInstance.forUI(LazarusMoodles.GAG.get(),
+                        0.95f + random.nextFloat() * 0.1f, 0.55f));
+            }
         }
     }
 
@@ -338,6 +369,13 @@ public final class ClientEffects {
             float side = -Mth.sin(mc.player.getHurtDir() * Mth.DEG_TO_RAD);
             event.setPitch(event.getPitch() + 3.0f * flinch);
             event.setRoll(event.getRoll() + 5.0f * side * flinch);
+        }
+        if (nauseaTicks >= 0) {
+            // Nausea: a slow sway that swells and fades over three seconds.
+            float t = nauseaTicks + partialTick;
+            float wave = Mth.sin(t / NAUSEA_TICKS * Mth.PI) * scale;
+            event.setRoll(event.getRoll() + 3.0f * Mth.sin(t * 0.15f) * wave);
+            event.setPitch(event.getPitch() + 1.5f * Mth.sin(t * 0.11f) * wave);
         }
         if (microsleep && blinkTicks >= 0) {
             // The head drops while dozing off and jerks back up on waking.
