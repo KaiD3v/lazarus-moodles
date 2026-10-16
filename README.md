@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 1.13.0" src="https://img.shields.io/badge/vers%C3%A3o-1.13.0-6b5b3e">
+  <img alt="Versão 1.14.0" src="https://img.shields.io/badge/vers%C3%A3o-1.14.0-6b5b3e">
 </p>
 
 # Lazarus Moodles
@@ -26,6 +26,7 @@ Não são só números numa barra. Quando o personagem entra em pânico, você o
   - [Dor: Pain](#dor-pain)
   - [Exaustão: Exhausted](#exaustão-exhausted)
   - [Alívio: Relieved](#alívio-relieved)
+  - [Sangramento: Bleeding](#sangramento-bleeding)
   - [Calmantes: Sedated e Withdrawal](#calmantes-sedated-e-withdrawal)
 - [Árvore de habilidades Coragem](#árvore-de-habilidades-coragem)
 - [HUD](#hud)
@@ -127,6 +128,15 @@ Só conta o medo que realmente subiu durante a ameaça. Um zumbi que entra e sai
 
 **Imersão:** um suspiro de alívio, uma ou duas respirações calmas, o coração desacelerando aos poucos até silenciar e a visão se abrindo levemente por alguns segundos.
 
+### Sangramento: Bleeding
+
+Aparece com o sangramento do **Apocalypse Now**: o sangramento normal é o nível 1 e o sangramento grave o nível 2. O dano continua sendo o do Apocalypse Now; o moodle acrescenta o resto:
+
+- **Medo mínimo:** enquanto sangra, o personagem fica pelo menos Tense (nível 1) ou Fearful (nível 2). Os calmantes continuam zerando o medo.
+- **Stamina:** regeneração −10% (nível 1) ou −20% (nível 2).
+- **Imersão:** borda vermelha de sangue pulsando com o coração, gotas de sangue pingando (quatro gravações) e, no sangramento grave, coração audível e a vista escurecendo aos poucos ao longo de um minuto, como se fosse desmaiar.
+- Bandagens e kits que curam o sangramento do Apocalypse Now encerram o moodle.
+
 ### Calmantes: Sedated e Withdrawal
 
 O item **Sedatives** (frasco de comprimidos) aparece em hospitais, farmácias, criados-mudos, kits e airdrops médicos e com saqueadores, soldados e zumbis com roupa de hospital. Ele aparece nas mesmas listas de loot das Pain Pills do Marbled, com um terço da chance delas.
@@ -179,7 +189,7 @@ O XP de fuga tem intervalo mínimo de 2 minutos, e fugas em Tense não dão XP, 
 
 Os moodles ativos ficam empilhados no lado direito da tela, como ícones de 20px:
 
-- A **cor do quadrado** mostra a gravidade. Nos moodles ruins ela vai do amarelo ao laranja e ao vermelho; no Relieved, ao verde. Sedated é azul-esverdeado e Withdrawal é roxo.
+- A **cor do quadrado** mostra a gravidade. Nos moodles ruins ela vai do amarelo ao laranja e ao vermelho; no Relieved, ao verde. Sedated é azul-esverdeado, Withdrawal é roxo e Bleeding é vermelho-escuro.
 - O **nome** aparece só quando o moodle surge ou muda de nível e some depois de ~3 segundos.
 - Ícones estáveis ficam com 65% de opacidade, para não poluir a tela.
 - **F1** esconde tudo.
@@ -195,7 +205,7 @@ Nenhuma é obrigatória. Cada efeito é ativado só quando o mod correspondente 
 | **TaCZ** | Detecta quando você mira e deixa a recarga mais lenta com medo |
 | **PeakStamina** | Regeneração, stamina máxima e custos de sprint, pulo e ataque |
 | **Legendary Survival Overhaul** | Sede extra com medo e exaustão; morfina contra a dor |
-| **Apocalypse Now** | Analgésico contra a dor |
+| **Apocalypse Now** | Analgésico contra a dor; sangramento para o moodle Bleeding |
 | **Puffish Skills** | Árvore de habilidades Coragem |
 
 ---
@@ -220,6 +230,7 @@ Comandos de operador (permissão 2). Os níveis forçados são temporários e n�
 | `/lm relieved 0..4` | Força o alívio |
 | `/lm sedated 0..1` | Força o efeito do calmante |
 | `/lm withdrawal 0..1` | Força a abstinência |
+| `/lm bleeding 0..2` | Força o sangramento (1 normal, 2 grave) |
 | `/lm status` | Mostra os níveis atuais, quais estão forçados e quantos monstros estão causando medo (vistos, perseguindo, colados e lembrados) |
 | `/lm clear [moodle]` | Remove todos os níveis forçados, ou só o de um moodle |
 
@@ -229,10 +240,7 @@ Comandos de operador (permissão 2). Os níveis forçados são temporários e n�
 
 ## Moodles futuros
 
-Dois moodles estão planejados, aproveitando sistemas que o Project Lazarus já tem:
-
-### 🩸 Bleeding (Sangrando)
-Ligado ao sangramento do **Apocalypse Now**. A ideia é tornar a hemorragia assustadora e visível: sangue pulsando no canto da tela, a vista escurecendo aos poucos e o coração acelerado. Isso valoriza bandagens e kits médicos e conversa com o sistema do modpack em que o rastro de sangue atrai zumbis.
+Planejado, aproveitando um sistema que o Project Lazarus já tem:
 
 ### 🦠 Sick / Infected (Infectado)
 Ligado aos estágios da infecção do **The Hordes**, a infecção do modpack. Conforme a doença avança: tosse, febre com a visão turva e tremores, náusea e menos stamina. O objetivo é que você *sinta* a infecção e a urgência de encontrar antibióticos, em vez de só acompanhar uma barra.
@@ -250,7 +258,7 @@ Ligado aos estágios da infecção do **The Hordes**, a infecção do modpack. C
 ### Jogadores (single player ou cliente)
 
 1. Instale o Forge 1.20.1, pelo [instalador oficial](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.20.1.html) ou criando um perfil Forge no CurseForge.
-2. Baixe o JAR mais recente em [`dist/`](dist/), atualmente [`lazarusmoodles-1.13.0.jar`](dist/lazarusmoodles-1.13.0.jar).
+2. Baixe o JAR mais recente em [`dist/`](dist/), atualmente [`lazarusmoodles-1.14.0.jar`](dist/lazarusmoodles-1.14.0.jar).
 3. Coloque o arquivo na pasta `mods` do perfil:
    - **CurseForge:** clique com o botão direito no perfil → *Open Folder* → `mods`
    - **Launcher oficial:** `%appdata%\.minecraft\mods`

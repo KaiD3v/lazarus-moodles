@@ -52,5 +52,13 @@
       "lazarusmoodles:calm_breath_2",
       "lazarusmoodles:calm_breath_3"
     ]
+  },
+  "blood_drip": {
+    "sounds": [
+      "lazarusmoodles:blood_drip_1",
+      "lazarusmoodles:blood_drip_2",
+      "lazarusmoodles:blood_drip_3",
+      "lazarusmoodles:blood_drip_4"
+    ]
   }
 }

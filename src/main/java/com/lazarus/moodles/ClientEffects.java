@@ -51,6 +51,12 @@ public final class ClientEffects {
     private static int ticksSinceBeat = 100;
     private static float shownFear;
     private static float shownTired;
+    // Bleeding: red edge strength per level, and how long severe bleeding has lasted (vision slowly darkens).
+    private static final float[] BLEEDING_VIGNETTE_STRENGTH = {0, 0.22f, 0.38f};
+    private static final int SEVERE_DARKEN_TICKS = 1200;
+    private static float shownBleeding;
+    private static int severeBleedingTicks;
+    private static int dripCooldown;
     private static int lastRelief;
     private static int reliefTicks = 200;
     private static int sighCooldown;
@@ -89,7 +95,8 @@ public final class ClientEffects {
         LocalPlayer player = mc.player;
         if (player == null || player != lastPlayer) {
             lastPlayer = player;
-            yawOffset = pitchOffset = shownFear = shownTired = 0;
+            yawOffset = pitchOffset = shownFear = shownTired = shownBleeding = 0;
+            severeBleedingTicks = dripCooldown = 0;
             lastRelief = sighCooldown = calmBreathsLeft = calmBeatTicks = 0;
             reliefTicks = 200;
             unsettledTicks = breathCooldown = beatCooldown = 0;
@@ -153,6 +160,12 @@ public final class ClientEffects {
         // Withdrawal makes the heartbeat audible already at Tense.
         int beatTicks = withdrawal && fear == 1 ? 18 : BEAT_TICKS[fear];
         float beatVolume = withdrawal && fear == 1 ? 0.35f : BEAT_VOLUME[fear];
+        int bleeding = playing(player) ? ClientOverlay.level(6) : 0;
+        // Severe bleeding makes the heartbeat audible even when fear alone would be slower or silent.
+        if (bleeding == 2 && (beatTicks == 0 || beatTicks > 16)) {
+            beatTicks = 16;
+            beatVolume = Math.max(beatVolume, 0.4f);
+        }
         if (beatTicks > 0 && beatCooldown == 0) {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(LazarusMoodles.HEARTBEAT.get(),
                     fear == 3 ? 1.1f : 1.0f, beatVolume));
@@ -171,7 +184,20 @@ public final class ClientEffects {
             }
         }
         tickRelief(mc, player, relief, fear);
+        tickBleeding(mc, player, bleeding);
         tickExhaustion(mc, player, exhausted, fear);
+    }
+
+    private static void tickBleeding(Minecraft mc, LocalPlayer player, int bleeding) {
+        shownBleeding += Mth.clamp(BLEEDING_VIGNETTE_STRENGTH[bleeding] - shownBleeding, -0.01f, 0.02f);
+        severeBleedingTicks = bleeding == 2 ? Math.min(SEVERE_DARKEN_TICKS, severeBleedingTicks + 1) : 0;
+        if (dripCooldown > 0) dripCooldown--;
+        if (bleeding > 0 && dripCooldown == 0) {
+            RandomSource random = player.getRandom();
+            mc.getSoundManager().play(SimpleSoundInstance.forUI(LazarusMoodles.BLOOD_DRIP.get(),
+                    0.9f + random.nextFloat() * 0.2f, bleeding == 2 ? 0.5f : 0.35f));
+            dripCooldown = bleeding == 2 ? 40 + random.nextInt(60) : 80 + random.nextInt(100);
+        }
     }
 
     // A sigh when relief rises, then one or two slow calming breaths.
@@ -356,6 +382,13 @@ public final class ClientEffects {
             float preBlink = blinkTicks < 0 && nextBlink <= 12 ? (12 - nextBlink + partialTick) / 12 : 0;
             tired = shownTired + 0.04f * Mth.sin(time * 0.08f) + 0.12f * Math.min(1, preBlink) + 0.15f * eyesClosed(partialTick);
             tired = Mth.clamp(tired * Math.max(0.35f, scale), 0, 0.6f);
+        }
+        // Bleeding shares the red channel with fear and throbs with the heartbeat; severe bleeding slowly darkens
+        // the whole edge over a minute, like losing consciousness.
+        if (shownBleeding > 0.01f) {
+            float blood = (shownBleeding + 0.1f * pulse(partialTick)) * Math.max(0.35f, scale);
+            fear = Math.max(fear, Math.min(0.95f, blood));
+            tired = Math.max(tired, 0.3f * severeBleedingTicks / SEVERE_DARKEN_TICKS * Math.max(0.35f, scale));
         }
         if (fear > 0 || tired > 0) {
             RenderSystem.enableBlend();

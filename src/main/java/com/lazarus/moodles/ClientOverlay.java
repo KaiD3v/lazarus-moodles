@@ -15,16 +15,17 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = LazarusMoodles.ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class ClientOverlay {
     private static final ResourceLocation ICONS = new ResourceLocation(LazarusMoodles.ID, "textures/gui/moodles.png");
-    private static final String[] KEYS = {"tense", "fearful", "panicked", "pain", "exhausted", "relieved", "sedated", "withdrawal"};
+    private static final String[] KEYS = {"tense", "fearful", "panicked", "pain", "exhausted", "relieved", "sedated", "withdrawal", "bleeding"};
     // Background color per level for fear, exhausted, relieved, pain, sedated, withdrawal: bad moodles go yellow to red,
-    // Relieved goes green, Sedated is teal and Withdrawal purple.
+    // Relieved goes green, Sedated is teal, Withdrawal purple and Bleeding dark red.
     private static final int[][] COLORS = {
             {0xC9A23A, 0xD9702E, 0xC0392B},
             {0x8A8778, 0xC9A23A, 0xD08A34, 0xD9702E, 0xC0392B},
             {0x6E8F5A, 0x5FA052, 0x4FB04A, 0x3FC042},
             {0xC9A23A, 0xD9702E, 0xC0392B},
             {0x3A9A9A},
-            {0x8E3A6A}};
+            {0x8E3A6A},
+            {0x8B1E1E, 0xB01010}};
     private static final int ICON = 20;
     private static final int SPACING = 24;
     // A moodle that appears or changes level is shown at full opacity with its name for this long, then fades.
@@ -67,7 +68,7 @@ public final class ClientOverlay {
         for (int i = 0; i < levels.length; i++) {
             int level = levels[i];
             if (level == 0) continue;
-            int icon = i == 0 ? level - 1 : i == 3 ? 3 : i == 4 ? 6 : i == 5 ? 7 : i + 3;
+            int icon = i == 0 ? level - 1 : i == 3 ? 3 : i == 4 ? 6 : i == 5 ? 7 : i == 6 ? 8 : i + 3;
             float fade = Mth.clamp((now - changedAt[i] - FRESH_MS) / (float) FADE_MS, 0, 1);
             float alpha = Mth.lerp(fade, 1.0f, STABLE_ALPHA);
             int color = COLORS[i][Math.min(level, COLORS[i].length) - 1];

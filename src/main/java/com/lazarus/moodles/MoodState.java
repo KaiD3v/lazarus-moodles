@@ -16,7 +16,7 @@ import java.util.WeakHashMap;
 
 final class MoodState {
     static final String TAG = "LazarusMoodles";
-    static final int COUNT = 6;
+    static final int COUNT = 7;
     private static final String[] KEYS = {"Stress", "Relieved"};
     private static final long CM_PER_LEVEL = 100_000;
     private static final long MAX_FOOT_DISTANCE_CM = 5 * CM_PER_LEVEL;
@@ -44,6 +44,11 @@ final class MoodState {
     private static final Map<ServerPlayer, Integer> CLEAR_SECONDS = new WeakHashMap<>();
     // Last threat breakdown per player for /lm status: seen, chasing, close, remembered.
     private static final Map<ServerPlayer, int[]> LAST_THREATS = new WeakHashMap<>();
+    // Apocalypse Now bleeding: normal is Bleeding 1, severe is Bleeding 2.
+    private static final ResourceLocation BLEEDING = new ResourceLocation("apocalypsenow", "bleeding");
+    private static final ResourceLocation SEVERE_BLEEDING = new ResourceLocation("apocalypsenow", "severebleeding");
+    // Seeing your own blood keeps fear at least at Tense (Bleeding 1) or Fearful (Bleeding 2).
+    private static final float[] BLEEDING_FEAR_FLOOR = {0, 34, 59};
     private static final ResourceLocation[] PAINKILLERS = {
             new ResourceLocation("legendarysurvivaloverhaul", "painkiller"),
             new ResourceLocation("apocalypsenow", "painkillerseffect")};
@@ -119,6 +124,7 @@ final class MoodState {
         boolean unsafe = nearby >= 3 || health < 0.45f;
         boolean dark = light < 4 && Courage.value(player, Courage.DARK_IMMUNITY) < 0.5;
         float target = critical ? 84 : unsafe ? 59 : threatened || dark ? 34 : 0;
+        target = Math.max(target, BLEEDING_FEAR_FLOOR[bleeding(player)]);
         float riseRate = 1 - Courage.fearResistance(player);
         int forcedRelief = testLevel(player, 2);
         int relief = Math.min(4, forcedRelief >= 0 ? forcedRelief : level(values[1]));
@@ -242,6 +248,7 @@ final class MoodState {
         levels[3] = (byte) pain;
         levels[4] = (byte) (sedatedSeconds > 0 ? 1 : 0);
         levels[5] = (byte) (withdrawalSeconds > 0 ? 1 : 0);
+        levels[6] = (byte) naturalBleeding(player);
         // The crash after sedatives adds one temporary Exhausted level.
         if (effective(player, 5, withdrawalSeconds)) levels[1] = (byte) Math.min(5, levels[1] + 1);
         for (int i = 0; i < COUNT; i++) {
@@ -249,6 +256,21 @@ final class MoodState {
             if (forced >= 0) levels[i] = (byte) forced;
         }
         return levels;
+    }
+
+    static int bleeding(ServerPlayer player) {
+        int forced = testLevel(player, 6);
+        return forced >= 0 ? forced : naturalBleeding(player);
+    }
+
+    private static int naturalBleeding(Player player) {
+        if (hasEffect(player, SEVERE_BLEEDING)) return 2;
+        return hasEffect(player, BLEEDING) ? 1 : 0;
+    }
+
+    private static boolean hasEffect(Player player, ResourceLocation id) {
+        MobEffect effect = ForgeRegistries.MOB_EFFECTS.getValue(id);
+        return effect != null && player.hasEffect(effect);
     }
 
     private void tickSedatives() {
@@ -281,8 +303,7 @@ final class MoodState {
 
     static boolean onPainkillers(Player player) {
         for (ResourceLocation id : PAINKILLERS) {
-            MobEffect effect = ForgeRegistries.MOB_EFFECTS.getValue(id);
-            if (effect != null && player.hasEffect(effect)) return true;
+            if (hasEffect(player, id)) return true;
         }
         return false;
     }
