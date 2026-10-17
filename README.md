@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 1.15.0" src="https://img.shields.io/badge/vers%C3%A3o-1.15.0-6b5b3e">
+  <img alt="Versão 1.15.1" src="https://img.shields.io/badge/vers%C3%A3o-1.15.1-6b5b3e">
 </p>
 
 # Lazarus Moodles
@@ -220,6 +220,7 @@ Nenhuma é obrigatória. Cada efeito é ativado só quando o mod correspondente 
 | **Apocalypse Now** | Analgésico contra a dor; sangramento para o moodle Bleeding |
 | **The Hordes** | Estágios da infecção para o moodle Infected |
 | **Puffish Skills** | Árvore de habilidades Coragem |
+| **Lazarus Stealth** | Lê o nível efetivo de Exaustão pela API pública `LazarusMoodlesApi.exhaustionLevel(ServerPlayer)` (0 a 5, incluindo a abstinência de sedativos): cansaço deixa os passos mais barulhentos |
 
 ---
 
@@ -269,7 +270,7 @@ Ideias em estudo, aproveitando sistemas que o Project Lazarus já tem: **Deafene
 ### Jogadores (single player ou cliente)
 
 1. Instale o Forge 1.20.1, pelo [instalador oficial](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.20.1.html) ou criando um perfil Forge no CurseForge.
-2. Baixe o JAR mais recente em [`dist/`](dist/), atualmente [`lazarusmoodles-1.15.0.jar`](dist/lazarusmoodles-1.15.0.jar).
+2. Baixe o JAR mais recente em [`dist/`](dist/), atualmente [`lazarusmoodles-1.15.1.jar`](dist/lazarusmoodles-1.15.1.jar).
 3. Coloque o arquivo na pasta `mods` do perfil:
    - **CurseForge:** clique com o botão direito no perfil → *Open Folder* → `mods`
    - **Launcher oficial:** `%appdata%\.minecraft\mods`
